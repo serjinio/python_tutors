@@ -1,0 +1,9 @@
+counter = 0
+i_visited_indices = set()
+k_visited_indices = set()
+for i in range(0,100):
+    for k in range(0,100):
+        if i != k and (i not in i_visited_indices or k not in k_visited_indices):
+            counter += 1
+        i_visited_indices.add(i)
+        k_visited_indices.add(k)
