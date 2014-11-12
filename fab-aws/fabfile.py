@@ -7,7 +7,7 @@ import logging
 
 
 env.user = 'root'
-env.dotfiles_dir = '../../../dotfiles'
+env.dotfiles_dir = '../../dotfiles'
 env.screenrc_config = os.path.join(env.dotfiles_dir, 'screenrc')
 env.emacs_config = os.path.join(env.dotfiles_dir, 'emacs')
 
