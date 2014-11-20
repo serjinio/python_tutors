@@ -42,7 +42,7 @@ class PolpUi(object):
 
     def _setup_layout(self):
         self._tk_root.columnconfigure(0, weight=75)
-        self._tk_root.resizable(height=FALSE)
+        self._tk_root.resizable(height=FALSE, width=FALSE)
 
     def _init_frames(self):
         self._nmr_frame = ttk.Frame(self._tk_root, padding="12 12 12")
@@ -118,7 +118,7 @@ class NmrControlUi(object):
         self._nmr_button.grid(
             column=3, row=3, sticky=E, pady=10)
         self._view_nmr_button = ttk.Button(
-            self._parent, text="View")
+            self._parent, text="View", command=self._view_data)
         self._view_nmr_button.grid(
             column=4, row=3, sticky=E, pady=10, padx=5)
 
@@ -127,6 +127,10 @@ class NmrControlUi(object):
             self._data_folder.get(), self._data_file_name_prefix.get(),
             self._data_file_name_suffix.get()))
         self._last_data_file.set(data_file)
+
+    def _view_data(self):
+        from dataviewer import DataViewerUi
+        DataViewerUi(Toplevel(self._parent), self._data_folder.get())
 
 
 class PolpCycleControlUi(object):
