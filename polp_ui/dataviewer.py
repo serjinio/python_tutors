@@ -16,23 +16,46 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import \
     FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
-from polpcommon import list_files_matching_extension, load_data_file
+from polpcommon import list_files_matching_extension, load_data_file, \
+    INVALID_DATA_SET
+
+
+def data_viewer(folder=os.getcwd(), parent=None):
+    """Creates and shows DataViewer window.
+
+    Args:
+      folder (string): Folder at which to create data viewer.
+      parent (Tk toplevel, optional): Parent window for this data viewer.
+        Use when you want to specify your pre-existing window object to use
+        for this data viewer.
+    """
+    DataViewerUi(folder, parent).show()
 
 
 class DataViewerUi(object):
 
-    def __init__(self, parent, folder=os.getcwd()):
+    def __init__(self, folder=os.getcwd(), parent=None):
+        """Data viewer constructor.
+
+        Args:
+          folder (string): Folder at which to open data viewer.
+          parent (Tk toplevel window, optional): Using this parameter you can
+            optionally specify window object to use for this data viewer.
+        """
         logging.debug('constructing data viewer for folder: "{}"'
                       .format(folder))
         self._parent = parent
-
         self._varCurrentDir = StringVar(value=folder)
         self._varFileList = StringVar()
 
+    def show(self):
+        if self._parent is None:
+            self._parent = Toplevel()
         self._init_ui()
         self._load_file_list()
 
     def _init_ui(self):
+        self._init_menu()
         self._frame = ttk.Frame(self._parent)
 
         self._btnChangeDir = ttk.Button(
@@ -63,8 +86,8 @@ class DataViewerUi(object):
 
         self._parent.rowconfigure(0, weight=100)
         self._parent.columnconfigure(0, weight=100)
-        self._frame.columnconfigure(1, weight=24)
-        self._frame.columnconfigure(3, weight=75)
+        self._frame.columnconfigure(1, weight=19)
+        self._frame.columnconfigure(3, weight=80)
         self._frame.rowconfigure(1, weight=99)
         self._frame.grid(row=0, column=0, sticky=(N, W, E, S))
         self._btnChangeDir.grid(
@@ -82,6 +105,13 @@ class DataViewerUi(object):
                           sticky=(N, W, S, E))
         self._szGrip = ttk.Sizegrip(self._frame).grid(
             column=999, row=999, sticky=(S, E))
+
+    def _init_menu(self):
+        self._menubar = Menu(self._parent)
+        self._parent['menu'] = self._menubar
+        self._mnuFile = Menu(self._menubar)
+        self._menubar.add_cascade(menu=self._mnuFile, label='File')
+        self._mnuFile.add_command(label='Exit', command=self._exit)
 
     def _load_file_list(self):
         matching_file_list = list_files_matching_extension(
@@ -102,11 +132,16 @@ class DataViewerUi(object):
         index = int(evt.widget.curselection()[0])
         filename = evt.widget.get(index)
         filepath = os.path.join(self._varCurrentDir.get(), filename)
-        logging.debug('will display data file: "{}"'.format(filepath))
-        dataset = load_data_file(filepath)
-        self.draw_plot(dataset)
+        dataset = self._load_dataset(filepath)
+        self._draw_plot(dataset)
 
-    def draw_plot(self, dataset):
+    def _load_dataset(self, filepath):
+        try:
+            return load_data_file(filepath)
+        except ValueError:
+            return INVALID_DATA_SET
+
+    def _draw_plot(self, dataset):
         self._mplFigure.clear()
         axes = self._mplFigure.add_subplot(111)
         self._plot_dataset(axes, dataset)
@@ -129,14 +164,8 @@ class DataViewerUi(object):
         else:
             axes.plot(dataset.x_data, dataset.y_data)
 
-    def draw_sample_graph(self):
-        a = self._mplFigure.add_subplot(111)
-        t = np.arange(0.0, 3.0, 0.01)
-        s = np.sin(2 * math.pi * t)
-        a.plot(t, s)
-        a.set_title('Tk embedding')
-        a.set_xlabel('X axis label')
-        a.set_ylabel('Y label')
+    def _exit(self):
+        self._parent.destroy()
 
 
 def _configure_logging():
@@ -147,6 +176,5 @@ def _configure_logging():
 if __name__ == '__main__':
     _configure_logging()
     root = Tk()
-    dv = DataViewerUi(root, '/mnt/hgfs/lab_data/2013/0919')
-    dv.draw_sample_graph()
+    data_viewer('/mnt/hgfs/lab_data/2013/0919', root)
     root.mainloop()

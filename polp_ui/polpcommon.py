@@ -89,13 +89,20 @@ def _load_dat(filepath):
                          .format(filepath))
     x_data = []
     y_data = []
+    errors_count = 0
     with open(filepath, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=' ', skipinitialspace=True)
         for row in reader:
+            if errors_count > 10:
+                raise ValueError(('File provided: "{}" does not seem to be '
+                                  'a valid .dat file, load aborted.')
+                                 .format(filepath))
             # only rows with six columns should be valid
             if len(row) == 6:
                 x_data.append(float(row[0]) * 1e6)
                 y_data.append(complex(float(row[1]), float(row[2])))
+            else:
+                errors_count += 1
     dataset = DataSet(x_data, y_data, os.path.basename(filepath),
                       'Time [us]', 'Amplitude [V]')
     logging.debug('read data: \n{}'.format(dataset))
@@ -179,10 +186,14 @@ class DataSet(object):
             raise ValueError(('Lengths of input data for X and Y values are '
                               'different: {} and {}. Invalid input data!')
                              .format(len(self.x_data), len(self.y_data)))
-        if any([not isinstance(x, numbers.Number) for x in self.x_data]):
+        # will check 10 first values, that it is correct numeric data
+        upper_limit = 10 if len(self.y_data) > 10 else len(self.y_data)
+        if any([not isinstance(x, numbers.Number)
+                for x in self.x_data[:upper_limit]]):
             raise ValueError(('Some of x values provided are not number(s)!'
-                             'it is invalid data!'))
-        if any([not isinstance(y, numbers.Number) for y in self.y_data]):
+                              'it is invalid data!'))
+        if any([not isinstance(y, numbers.Number)
+                for y in self.y_data[:upper_limit]]):
             raise ValueError(('Some of y values provided are not number(s)!'
                               'it is invalid data!'))
 
@@ -193,6 +204,9 @@ class DataSet(object):
             res += '\n {}; {}'.format(self.x_data[i], self.y_data[i])
         res += '\n ...'
         return res
+
+
+INVALID_DATA_SET = DataSet([], [], 'Bad dataset')
 
 
 def _configure_logging():
