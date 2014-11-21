@@ -37,7 +37,7 @@ def list_files_matching_extension(path, extensions_list):
            any([f.endswith(ext) for ext in extensions_list]):
             matching.append((f, os.stat(os.path.join(path, f)).st_ctime))
     if len(matching) > 0:
-        matching.sort(key=lambda x: lambda el: el[1])
+        matching.sort(key=lambda el: el[1])
         matching = zip(*matching)[0]
     return matching
 
@@ -63,12 +63,19 @@ def _load_smd(filepath):
         raise ValueError('Given file path: "{}" does not exists.'
                          .format(filepath))
     x_data, y_data = [], []
+    errors_count = 0
     with open(filepath, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=' ', skipinitialspace=True)
         for row in reader:
+            if errors_count > 20:
+                raise ValueError(('File provided: "{}" does not seem to be '
+                                  'a valid .dat file, load aborted.')
+                                 .format(filepath))
             # only rows with 2 columns are a valid data rows
             if len(row) == 2:
                 y_data.append(complex(float(row[0]), float(row[1])))
+            else:
+                errors_count += 1
     # header params
     with file(filepath, 'rb') as input_file:
         npoints, dwell, sf1 = [input_file.readline() for i in range(0, 3)]
@@ -87,13 +94,12 @@ def _load_dat(filepath):
     if not os.path.exists(filepath):
         raise ValueError('Given file path: "{}" does not exists.'
                          .format(filepath))
-    x_data = []
-    y_data = []
+    x_data, y_data = [], []
     errors_count = 0
     with open(filepath, 'rb') as csvfile:
         reader = csv.reader(csvfile, delimiter=' ', skipinitialspace=True)
         for row in reader:
-            if errors_count > 10:
+            if errors_count > 20:
                 raise ValueError(('File provided: "{}" does not seem to be '
                                   'a valid .dat file, load aborted.')
                                  .format(filepath))

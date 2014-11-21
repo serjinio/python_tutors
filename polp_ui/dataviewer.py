@@ -3,8 +3,6 @@
 import os
 import logging
 import logging.config
-import math
-import numpy as np
 
 from Tkinter import *
 import tkFileDialog
@@ -124,7 +122,7 @@ class DataViewerUi(object):
         new_dir = tkFileDialog.askdirectory()
         if new_dir:
             self._varCurrentDir.set(new_dir)
-        self._load_file_list()
+            self._load_file_list()
 
     def _lstFiles_onselect(self, evt):
         if len(evt.widget.curselection()) == 0:
