@@ -17,8 +17,16 @@ import logging
 import logging.config
 
 import config
-from polpcommon import DataStorePrefs
-from polptasks import nmr
+from common import DataStorePrefs
+from tasks import nmr
+
+
+def start_app():
+    _configure_logging()
+    logging.info('launching polp ui')
+    tk_root = Tk()
+    polp_ui = PolpUi(tk_root)
+    polp_ui.show()
 
 
 class PolpUi(object):
@@ -150,9 +158,4 @@ def _configure_logging():
 
 
 if __name__ == '__main__':
-    _configure_logging()
-
-    logging.info('launching polp ui')
-    tk_root = Tk()
-    polp_ui = PolpUi(tk_root)
-    polp_ui.show()
+    start_app()

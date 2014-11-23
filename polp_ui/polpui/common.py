@@ -203,6 +203,24 @@ class DataSet(object):
             raise ValueError(('Some of y values provided are not number(s)!'
                               'it is invalid data!'))
 
+    def xlimits(self):
+        """Return min & max X coordinates on this dataset."""
+        if len(self) > 0:
+            min_x = min(self.x_data)
+            max_x = max(self.x_data)
+            return (min_x, max_x)
+        else:
+            return (0., 0.)
+
+    def ylimits(self):
+        """Return min & max Y coordinates on this dataset."""
+        if len(self) > 0:
+            min_y = min(self.y_data)
+            max_y = max(self.y_data)
+            return (min_y, max_y)
+        else:
+            return (0., 0.)
+
     def __str__(self):
         res = 'Dataset: "{}" ({} points):'.format(self.title, len(self.x_data))
         upper_limit = 7 if len(self.x_data) > 10 else len(self.x_data)
@@ -210,6 +228,9 @@ class DataSet(object):
             res += '\n {}; {}'.format(self.x_data[i], self.y_data[i])
         res += '\n ...'
         return res
+
+    def __len__(self):
+        return len(self.x_data)
 
 
 INVALID_DATA_SET = DataSet([], [], 'Bad dataset')

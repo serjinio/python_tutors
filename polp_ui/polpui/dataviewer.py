@@ -7,14 +7,10 @@ import logging.config
 from Tkinter import *
 import tkFileDialog
 import ttk
+from tkwidgets.plotting import PlotCanvas
 
-import matplotlib
-matplotlib.use('TkAgg')
-from matplotlib.figure import Figure
-from matplotlib.backends.backend_tkagg import \
-    FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
-from polpcommon import list_files_matching_extension, load_data_file, \
+from common import list_files_matching_extension, load_data_file, \
     INVALID_DATA_SET
 
 
@@ -70,17 +66,10 @@ class DataViewerUi(object):
         self._lstFiles.bind('<<ListboxSelect>>', self._lstFiles_onselect)
         self._lblDataView = ttk.Label(self._frame, text='Data View:')
 
-        self._frmMpl = ttk.Frame(self._frame)
-        self._mplFigure = Figure(figsize=(5, 4), dpi=100)
-        self._cnvMplGraphView = FigureCanvasTkAgg(
-            self._mplFigure, master=self._frmMpl)
-        self._cnvMplGraphView.show()
-        self._cnvMplGraphView.get_tk_widget().pack(
+        self._frmPlot = ttk.Frame(self._frame)
+        self._pltCanvas = PlotCanvas(self._frmPlot)
+        self._pltCanvas.pack(
             side=TOP, fill=BOTH, expand=1)
-
-        self._cnvMplGraphView_toolbar = NavigationToolbar2TkAgg(
-            self._cnvMplGraphView, self._frmMpl)
-        self._cnvMplGraphView_toolbar.update()
 
         self._parent.rowconfigure(0, weight=100)
         self._parent.columnconfigure(0, weight=100)
@@ -99,8 +88,8 @@ class DataViewerUi(object):
         self._lstFiles.grid(column=0, columnspan=2, row=1, padx=5,
                             pady=5, sticky=(N, W, E, S))
         self._scrFiles.grid(column=2, row=1, pady=5, sticky=(N, S))
-        self._frmMpl.grid(column=3, row=1, pady=5, padx=5,
-                          sticky=(N, W, S, E))
+        self._frmPlot.grid(column=3, row=1, pady=5, padx=5,
+                           sticky=(N, W, S, E))
         self._szGrip = ttk.Sizegrip(self._frame).grid(
             column=999, row=999, sticky=(S, E))
 
@@ -140,18 +129,17 @@ class DataViewerUi(object):
             return INVALID_DATA_SET
 
     def _draw_plot(self, dataset):
-        self._mplFigure.clear()
-        axes = self._mplFigure.add_subplot(111)
-        self._plot_dataset(axes, dataset)
-        self._mpl_setup_axes(axes, dataset)
-        self._cnvMplGraphView.draw()
+        self._pltCanvas.clear()
+        self._plot_dataset(self._pltCanvas, dataset)
+        self._plot_setup_attrs(self._pltCanvas, dataset)
 
-    def _mpl_setup_axes(self, ax, dataset):
-        ax.set_title(dataset.title)
-        ax.set_xlabel(dataset.x_data_name)
-        ax.set_ylabel(dataset.y_data_name)
-        ax.legend()
-        ax.grid()
+    def _plot_setup_attrs(self, canvas, dataset):
+        pass
+        # ax.set_title(dataset.title)
+        # ax.set_xlabel(dataset.x_data_name)
+        # ax.set_ylabel(dataset.y_data_name)
+        # ax.legend()
+        # ax.grid()
 
     def _plot_dataset(self, axes, dataset):
         if dataset.is_y_data_complex():
