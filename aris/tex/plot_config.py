@@ -3,7 +3,7 @@
 from math import sqrt
 
 
-fig_width_pt = 440. * 0.75  # Get this from LaTeX using \showthe\columnwidth
+fig_width_pt = 220. * 0.75  # Get this from LaTeX using \showthe\columnwidth
 inches_per_pt = 1.0 / 72.27               # Convert pt to inch
 golden_mean = (sqrt(5.0) - 1.0) / 2.0         # Aesthetic ratio
 fig_width = fig_width_pt * inches_per_pt  # width in inches
@@ -18,7 +18,7 @@ plot_params = {
     'ytick.labelsize': 11,
     'text.usetex': True,
     'figure.figsize': fig_size,
-    'lines.markersize': 3,
+    'lines.markersize': 2,
     'figure.autolayout': True
 }
 

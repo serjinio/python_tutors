@@ -53,6 +53,18 @@ def plot_Ay():
     plt.locator_params(axis='y', nbins=10)
     plt.locator_params(axis='x', nbins=6)
 
+    plt.fill_between(ay_71_sens_down.q, ay_71_sens_down.Ay,
+                     ay_71_sens_up.Ay, facecolor='cyan', lw=0,
+                     interpolate=True)
+    plt.plot(ay_71.q, ay_71.Ay, '--',
+             color='red', linewidth=1.0, label='71 MeV/A (+1.5)')
+    
+    plt.axes().fill_between(ay_100_sens_down.q, ay_100_sens_down.Ay,
+                            ay_100_sens_up.Ay, facecolor='cyan', lw=0,
+                            interpolate=True, alpha=0.5)
+    plt.plot(ay_100.q, ay_100.Ay, '-.',
+             color='red', linewidth=1.0, label='100 MeV/A')
+
     plt.fill_between(ay_200_sens_down.q, ay_200_sens_down.Ay,
                      ay_200_sens_up.Ay, facecolor='cyan', lw=0,
                      interpolate=True, alpha=0.5)
@@ -62,25 +74,10 @@ def plot_Ay():
     plt.errorbar(ay_200_err.q, ay_200_err.Ay, yerr=ay_200_err.yerr,
                  color='black', fmt='s')
 
-    plt.fill_between(ay_71_sens_down.q, ay_71_sens_down.Ay,
-                     ay_71_sens_up.Ay, facecolor='cyan', lw=0,
-                     interpolate=True)
-    plt.plot(ay_71.q, ay_71.Ay, '--',
-             color='red', linewidth=1.0, label='71 MeV/A (+1.5)')
-    # plt.plot(ay_71_sens_down.q, ay_71_sens_down.Ay, '--',
-    #          color='green', linewidth=1.0)
-    # plt.plot(ay_71_sens_up.q, ay_71_sens_up.Ay, '--',
-    #          color='green', linewidth=1.0)
-    
-    plt.axes().fill_between(ay_100_sens_down.q, ay_100_sens_down.Ay,
-                            ay_100_sens_up.Ay, facecolor='cyan', lw=0,
-                            interpolate=True, alpha=0.5)
-    plt.plot(ay_100.q, ay_100.Ay, '-.',
-             color='red', linewidth=1.0, label='100 MeV/A')
-
     xlabel = plt.xlabel('$q\ (fm^{-1})$')
     ylabel = plt.ylabel('$A_y$')
     plt.legend(loc=2)
+    plt.legend(loc='upper right', bbox_to_anchor=(0.45, 1.1))
     plt.savefig('expected_ay.eps', bbox_extra_artists=[xlabel, ylabel],
                 bbox_inches='tight')
 
@@ -121,20 +118,20 @@ def plot_cs():
                             cs_100_sens_up.CS, facecolor='cyan', lw=0,
                             interpolate=True, alpha=0.5)
     plt.plot(cs_100.q, cs_100.CS, '-.',
-             color='red', linewidth=1.0, label='100 MeV/A')
+             color='red', linewidth=1.0, label='100 MeV/A (/20)')
 
     plt.axes().fill_between(cs_200_sens_down.q, cs_200_sens_down.CS,
                             cs_200_sens_up.CS, facecolor='cyan', lw=0,
                             interpolate=True, alpha=0.5)
     plt.plot(cs_200.q, cs_200.CS,
-             color='red', linewidth=1.0, label='200 MeV/A')
+             color='red', linewidth=1.0, label='200 MeV/A (/400)')
     cs_200_err = cs_200[np.isfinite(cs_200['yerr'])]
     plt.errorbar(cs_200_err.q, cs_200_err.CS, yerr=cs_200_err.yerr,
                  color='black', fmt='s')
 
     xlabel = plt.xlabel('$q\ (fm^{-1})$')
     ylabel = plt.ylabel('${d \\sigma} / {d \\Omega}\ (mb/sr)$')
-    plt.legend(loc=1)
+    plt.legend(loc='upper left', bbox_to_anchor=(0.55, 1.1))
     plt.savefig('expected_cs.eps', bbox_extra_artists=[xlabel, ylabel],
                 bbox_inches='tight')
 
