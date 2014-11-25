@@ -10,10 +10,11 @@ NMR_FILENAME_PREFIX = 'nmr-'
 NMR_FILENAME_SUFFIX = '.dat'
 
 # MW/NMR mode control programs
-MW_ON_EXEC = '/home/polp/GPIB/src/mwoff'
-MW_OFF_EXEC = '/home/polp/GPIB/mwon'
+MW_ON_EXEC = '/home/polp/GPIB/src/mwon'
+MW_OFF_EXEC = '/home/polp/GPIB/mwoff'
 
 # NMR acquisition programs
 
 # creates .saveise in the current directory
 DO_NMR_EXEC = '/home/polp/GPIB/nmr'
+NMR_DATA_FILE_NAME = '.saveise'

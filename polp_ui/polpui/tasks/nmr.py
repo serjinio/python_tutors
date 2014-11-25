@@ -1,24 +1,37 @@
-############################################################
-# tasks for NMR acquisition
-############################################################
+"""
+tasks for nmr acquisition
+"""
 
 
 import logging
 import os
-from invoke import task, run
+import tempfile
+import subprocess
+import shutil
+
+from polpui import config
 
 
-@task
-def sample():
-    run("echo hello")
-
-
-@task
 def acquire(datastore_prefs):
-    prepare_datastore_path(datastore_prefs.path)
-    datafile_path = get_next_datafile_path(datastore_prefs)
     logging.info('starting NMR acquisition...')
-    run('touch "{}"'.format(datafile_path))
+    # _check_exists(config.DO_NMR_EXEC)
+    prepare_datastore_path(datastore_prefs.path)
+    try:
+        tmpdir = tempfile.mkdtemp(prefix='nmr_')
+        datafile_path = get_next_datafile_path(datastore_prefs)
+        tmp_datafile_path = os.path.join(tmpdir, config.NMR_DATA_FILE_NAME)
+        # rc = subprocess.call(config.DO_NMR_EXEC, cwd=tmpdir)
+        # to mock real process
+        rc = subprocess.call(['touch', '.saveise'], cwd=tmpdir)
+        if rc != 0:
+            raise RuntimeWarning(('NMR data acquisition subprocess returned '
+                                  'non-zero code.'))
+        if not os.path.exists(tmp_datafile_path):
+            raise RuntimeWarning(('Cannot find NMR data file: "{}"').format(
+                tmp_datafile_path))
+        shutil.copyfile(tmp_datafile_path, datafile_path)
+    finally:
+        shutil.rmtree(tmpdir)
     logging.info('NMR acquired in "{}"'.format(datafile_path))
     return datafile_path
 
@@ -58,7 +71,6 @@ def get_last_datafile_number(datastore_prefs):
     logging.debug('using data storage settings: {}'.format(datastore_prefs))
     flist = [fname for fname in os.listdir(datastore_prefs.path) if
              datastore_prefs.is_filename_matches(fname)]
-    print flist
     fnumbers = [int(datastore_prefs.extract_filename_number_part(fname))
                 for fname in flist]
     return max(fnumbers + [0])
@@ -68,3 +80,8 @@ def _configure_logging():
     program_path = os.path.dirname(os.path.realpath(__file__))
     logging.config.fileConfig(os.path.join(program_path, 'logging.cfg'))
 
+
+def _check_exists(exec_path):
+    if not os.path.exists(exec_path):
+        raise RuntimeWarning('executable does not exists: "{}"'.format(
+            exec_path))

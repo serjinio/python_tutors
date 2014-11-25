@@ -9,7 +9,6 @@ import numbers
 import csv
 import logging
 import logging.config
-import math
 
 
 def list_files_matching_prefs(datastore_prefs):

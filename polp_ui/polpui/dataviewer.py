@@ -23,7 +23,9 @@ def data_viewer(folder=os.getcwd(), parent=None):
         Use when you want to specify your pre-existing window object to use
         for this data viewer.
     """
-    DataViewerUi(folder, parent).show()
+    dv = DataViewerUi(folder, parent)
+    dv.show()
+    return dv
 
 
 class DataViewerUi(object):
@@ -38,19 +40,36 @@ class DataViewerUi(object):
         """
         logging.debug('constructing data viewer for folder: "{}"'
                       .format(folder))
-        self._parent = parent
+        self.window = parent
         self._varCurrentDir = StringVar(value=folder)
         self._varFileList = StringVar()
 
+    @property
+    def current_dir(self):
+        return self._varCurrentDir.get()
+
+    def set_dir(self, new_dir):
+        self._varCurrentDir.set(new_dir)
+        self._load_file_list()
+
     def show(self):
-        if self._parent is None:
-            self._parent = Toplevel()
+        if self.window is None:
+            self.window = Toplevel()
         self._init_ui()
         self._load_file_list()
 
+    def show_data_file(self, filepath):
+        """Shows provided filename in dataviewer UI by its full path."""
+        self._load_file_list()
+        self.set_dir(os.path.dirname(filepath))
+        idx = self._find_file_index(os.path.basename(filepath))
+        self._lstFiles.selection_clear(0, END)
+        self._lstFiles.selection_set(idx)
+        self._lstFiles.see(idx)
+
     def _init_ui(self):
         self._init_menu()
-        self._frame = ttk.Frame(self._parent)
+        self._frame = ttk.Frame(self.window)
 
         self._btnChangeDir = ttk.Button(
             self._frame, text="Change Dir.", command=self._select_dir)
@@ -71,8 +90,8 @@ class DataViewerUi(object):
         self._pltCanvas.pack(
             side=TOP, fill=BOTH, expand=1)
 
-        self._parent.rowconfigure(0, weight=100)
-        self._parent.columnconfigure(0, weight=100)
+        self.window.rowconfigure(0, weight=100)
+        self.window.columnconfigure(0, weight=100)
         self._frame.columnconfigure(1, weight=19)
         self._frame.columnconfigure(3, weight=80)
         self._frame.rowconfigure(1, weight=99)
@@ -94,8 +113,8 @@ class DataViewerUi(object):
             column=999, row=999, sticky=(S, E))
 
     def _init_menu(self):
-        self._menubar = Menu(self._parent)
-        self._parent['menu'] = self._menubar
+        self._menubar = Menu(self.window)
+        self.window['menu'] = self._menubar
         self._mnuFile = Menu(self._menubar)
         self._menubar.add_cascade(menu=self._mnuFile, label='File')
         self._mnuFile.add_command(label='Exit', command=self._exit)
@@ -119,8 +138,21 @@ class DataViewerUi(object):
         index = int(evt.widget.curselection()[0])
         filename = evt.widget.get(index)
         filepath = os.path.join(self._varCurrentDir.get(), filename)
-        dataset = self._load_dataset(filepath)
-        self._draw_plot(dataset)
+        self._show_dataset(filepath)
+
+    def _show_dataset(self, filename):
+        filepath = os.path.join(self.current_dir, filename)
+        if not os.path.exists(filepath):
+            raise ValueError('The file specified: "{}" does not eixsts.'
+                             .format(filepath))
+        self._draw_plot(self._load_dataset(filepath))
+
+    def _find_file_index(self, filename):
+        for idx, item in enumerate(self._lstFiles.get(0, END)):
+            if item == filename:
+                return idx
+        raise ValueError(('Cannot find file with a given name: "{}"'
+                          ' in current file list.').format(filename))
 
     def _load_dataset(self, filepath):
         try:
@@ -151,7 +183,7 @@ class DataViewerUi(object):
             axes.plot(dataset.x_data, dataset.y_data)
 
     def _exit(self):
-        self._parent.destroy()
+        self.window.destroy()
 
 
 def _configure_logging():

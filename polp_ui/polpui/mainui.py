@@ -19,6 +19,7 @@ import logging.config
 import config
 from common import DataStorePrefs
 from tasks import nmr
+from tasks import polcontrol
 
 
 def start_app():
@@ -84,6 +85,7 @@ class NmrControlUi(object):
         self._varDataFileNameSuffix = StringVar(
             value=datastore_prefs.filename_suffix)
         self._varDataFile = StringVar()
+        self._dataviewer = None
         self._init_ui()
 
     def _init_ui(self):
@@ -128,28 +130,48 @@ class NmrControlUi(object):
             self._varDataFolder.get(), self._varDataFileNamePrefix.get(),
             self._varDataFileNameSuffix.get()))
         self._varDataFile.set(data_file)
+        if self._is_dataviewer_open():
+            self._dataviewer.show_data_file(data_file)
+
+    def _is_dataviewer_open(self):
+        return self._dataviewer is not None and \
+            self._dataviewer.window.winfo_exists()
 
     def _view_data(self):
         from dataviewer import data_viewer
-        data_viewer(self._varDataFolder.get())
+        self._dataviewer = data_viewer(self._varDataFolder.get())
 
 
 class PolpCycleControlUi(object):
 
+    NMR_MODE = 'nmr'
+    POL_MODE = 'pol'
+
     def __init__(self, parent):
         self._parent = parent
-        self._varMode = StringVar()
+        self._varMode = StringVar(value=self.NMR_MODE)
         self._init_ui()
 
     def _init_ui(self):
         ttk.Label(self._parent, text='Polarization control:').grid(
             column=0, row=0, columnspan=2, sticky=W)
-        ttk.Radiobutton(self._parent, text='Polarization mode',
-                        variable=self._varMode, value='pol').grid(
-                            column=0, row=1, sticky=W, padx=10, pady=5)
-        ttk.Radiobutton(self._parent, text='NMR mode',
-                        variable=self._varMode, value='nmr').grid(
-                            column=0, row=2, sticky=W, padx=10, pady=5)
+        self._rbtPolMode = ttk.Radiobutton(
+            self._parent, text='Polarization mode',
+            variable=self._varMode, value=self.POL_MODE)
+        self._rbtPolMode.grid(column=0, row=1, sticky=W, padx=10, pady=5)
+        self._rbtNmrMode = ttk.Radiobutton(
+            self._parent, text='NMR mode',
+            variable=self._varMode, value=self.NMR_MODE)
+        self._rbtNmrMode.grid(column=0, row=2, sticky=W, padx=10, pady=5)
+        self._varMode.trace('w', self._varMode_onchange)
+        self._varMode.set(self.NMR_MODE)
+
+    def _varMode_onchange(self, name, index, mode):
+        logging.debug('mode selected: {}'.format(self._varMode.get()))
+        if self._varMode.get() == self.NMR_MODE:
+            polcontrol.mw_off()
+        else:
+            polcontrol.mw_on()
 
 
 def _configure_logging():
