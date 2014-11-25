@@ -66,6 +66,7 @@ class DataViewerUi(object):
         self._lstFiles.selection_clear(0, END)
         self._lstFiles.selection_set(idx)
         self._lstFiles.see(idx)
+        self._show_dataset(os.path.basename(filepath))
 
     def _init_ui(self):
         self._init_menu()
@@ -137,13 +138,12 @@ class DataViewerUi(object):
             return
         index = int(evt.widget.curselection()[0])
         filename = evt.widget.get(index)
-        filepath = os.path.join(self._varCurrentDir.get(), filename)
-        self._show_dataset(filepath)
+        self._show_dataset(filename)
 
     def _show_dataset(self, filename):
         filepath = os.path.join(self.current_dir, filename)
         if not os.path.exists(filepath):
-            raise ValueError('The file specified: "{}" does not eixsts.'
+            raise ValueError('The file specified: "{}" does not exists.'
                              .format(filepath))
         self._draw_plot(self._load_dataset(filepath))
 
@@ -173,14 +173,14 @@ class DataViewerUi(object):
         # ax.legend()
         # ax.grid()
 
-    def _plot_dataset(self, axes, dataset):
+    def _plot_dataset(self, canvas, dataset):
         if dataset.is_y_data_complex():
             real_part = [c.real for c in dataset.y_data]
             imag_part = [c.imag for c in dataset.y_data]
-            axes.plot(dataset.x_data, real_part, label='Re')
-            axes.plot(dataset.x_data, imag_part, label='Im')
+            canvas.plot(dataset.x_data, real_part, label='Re')
+            canvas.plot(dataset.x_data, imag_part, label='Im')
         else:
-            axes.plot(dataset.x_data, dataset.y_data)
+            canvas.plot(dataset.x_data, dataset.y_data)
 
     def _exit(self):
         self.window.destroy()
