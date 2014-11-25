@@ -16,6 +16,7 @@ class PlotCanvasSettings(object):
         """No arg constructor creates default settings object."""
         self.bg_color = '#ffffff'
         self.margins = 0.1
+        self.axes_margins = self.margins / 2.
         self.grid = True
 
 
@@ -26,7 +27,7 @@ class PlotCanvas(Tkinter.Canvas, object):
 
     def __init__(self, parent, cnf={},
                  plot_settings=DEFAULT_PLOT_SETTINGS, *kwargs):
-        super(PlotCanvas, self).__init__(parent, cnf, *kwargs)
+        Tkinter.Canvas.__init__(self, parent, cnf, *kwargs)
         self._parent = parent
         self.plots = []
         self._plot_settings = plot_settings
@@ -50,9 +51,22 @@ class PlotCanvas(Tkinter.Canvas, object):
 
     def _configure_canvas(self):
         self.config(background=self._plot_settings.bg_color)
+        self.bind('<Configure>', self._resize)
+
+    def _resize(self, evt):
+        self.refresh()
 
     def _draw_axes(self):
-        pass
+        ymin, ymax = self._plot_ylimits()
+        ydist = abs(ymin - ymax)
+        xmin, xmax = self._plot_xlimits()
+        xdist = abs(xmax - xmin)
+        ymin -= ydist * self._plot_settings.margins / 2.
+        ymax += ydist * self._plot_settings.margins / 2.
+        xmin -= xdist * self._plot_settings.margins / 2.
+        xmax += xdist * self._plot_settings.margins / 2.
+        ax = Axes((xmin, xmax), (ymin, ymax))
+        ax.draw(self, self._drawing_prefs())
 
     def _draw_plots(self):
         draw_prefs = self._drawing_prefs()
@@ -62,8 +76,8 @@ class PlotCanvas(Tkinter.Canvas, object):
             p.draw(self, draw_prefs)
 
     def _drawing_prefs(self):
-        canvas_ylimits = (0, float(self.config()['height'][4]))
-        canvas_xlimits = (0, float(self.config()['width'][4]))
+        canvas_ylimits = (0, float(self.winfo_height()))
+        canvas_xlimits = (0, float(self.winfo_width()))
         plot_ylimits = self._plot_ylimits()
         plot_xlimits = self._plot_xlimits()
         scaling = 1. - 2 * self._plot_settings.margins
@@ -113,6 +127,39 @@ class PlotCanvas(Tkinter.Canvas, object):
             plots_str = str(p) + '\n'
         res = 'PlotCanvas, plots list: \n"{}"'.format(plots_str)
         return res
+
+
+class Axes(object):
+    """Axes on a drawing canvas."""
+
+    def __init__(self, xlimits, ylimits):
+        """Consturcts new axes instance.
+
+        Args:
+          xlimits (2-tuple): limits for X axis in plot coordinates
+          ylimits (2-tuple): limits for Y axis in plot coordinates
+        """
+        self._xlimits = xlimits
+        self._ylimits = ylimits
+
+    def draw(self, plot_canvas, draw_prefs):
+        x_origin, y_origin = self._xlimits[0], self._ylimits[0]
+        x_top, y_top = self._xlimits[1], self._ylimits[1]
+        x_origin_canv, y_origin_canv = draw_prefs.plot_point(
+            x_origin, y_origin)
+        x_top_canv, y_top_canv = draw_prefs.plot_point(
+            x_top, y_top)
+        logging.debug(('drawing axes at points: origin: {}:{}, '
+                       'X,Y top: {}:{}').format(
+                           x_origin, y_origin, x_top, y_top))
+        logging.debug(('in canvas coordinates: origin: {}:{}, '
+                       'X,Y top: {}:{}').format(
+                           x_origin_canv, y_origin_canv,
+                           x_top_canv, y_top_canv))
+        plot_canvas.create_line(x_origin_canv, y_origin_canv,
+                                x_origin_canv, y_top_canv, width=2.)
+        plot_canvas.create_line(x_origin_canv, y_origin_canv,
+                                x_top_canv, y_origin_canv, width=2.)
 
 
 class Plot(object):
@@ -180,7 +227,7 @@ class DrawingPreferences(object):
             plot_pts.append((self.plot_x_coord(x), self.plot_y_coord(y)))
         return plot_pts
 
-    def plot_point(x, y):
+    def plot_point(self, x, y):
         """Returns 2-tuple with coordinates of canvas_point, where
         the provided data_point should be drawn.
 
@@ -188,7 +235,7 @@ class DrawingPreferences(object):
           data_point (2-tuple): X, Y coordinates of a data point which
             which coordinates need to be converted into canvas coordinates.
         """
-        return (x, y)
+        return (self.plot_x_coord(x), self.plot_y_coord(y))
 
     def plot_x_coord(self, x):
         """Returns plot X coordinate which corresponds to passed
