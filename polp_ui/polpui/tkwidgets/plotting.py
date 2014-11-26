@@ -15,7 +15,7 @@ class PlotCanvasSettings(object):
     def __init__(self):
         """No arg constructor creates default settings object."""
         self.bg_color = '#ffffff'
-        self.margins = 0.1
+        self.margins = 0.08
         self.axes_margins = self.margins / 2.
         self.grid = True
 
@@ -61,29 +61,35 @@ class PlotCanvas(Tkinter.Canvas, object):
         ydist = abs(ymin - ymax)
         xmin, xmax = self._plot_xlimits()
         xdist = abs(xmax - xmin)
-        ymin -= ydist * self._plot_settings.margins / 2.
-        ymax += ydist * self._plot_settings.margins / 2.
-        xmin -= xdist * self._plot_settings.margins / 2.
-        xmax += xdist * self._plot_settings.margins / 2.
+        ymin -= ydist * self._plot_settings.margins
+        ymax += ydist * self._plot_settings.margins
+        xmin -= xdist * self._plot_settings.margins
+        xmax += xdist * self._plot_settings.margins
+        scaling = 1. - 2 * self._plot_settings.margins
         ax = Axes((xmin, xmax), (ymin, ymax))
-        ax.draw(self, self._drawing_prefs())
+        ax.draw(self, self._coord_transform(scaling=scaling))
 
     def _draw_plots(self):
-        draw_prefs = self._drawing_prefs()
+        draw_prefs = self._plot_coord_transform()
         logging.debug('drawing plots using draw prefs: \n{}'.
                       format(draw_prefs))
         for p in self.plots:
             p.draw(self, draw_prefs)
 
-    def _drawing_prefs(self):
-        canvas_ylimits = (0, float(self.winfo_height()))
-        canvas_xlimits = (0, float(self.winfo_width()))
+    def _plot_coord_transform(self):
         plot_ylimits = self._plot_ylimits()
         plot_xlimits = self._plot_xlimits()
-        scaling = 1. - 2 * self._plot_settings.margins
-        return DrawingPreferences(plot_xlimits, plot_ylimits,
-                                  canvas_xlimits, canvas_ylimits,
-                                  scale_factor=scaling)
+        scaling = 1. - 4 * self._plot_settings.margins
+        return self._coord_transform(xlimits=plot_xlimits,
+                                     ylimits=plot_ylimits, scaling=scaling)
+
+    def _coord_transform(self, xlimits=[0., 1.], ylimits=[0., 1.],
+                         scaling=1.):
+        canvas_ylimits = (0, float(self.winfo_height()))
+        canvas_xlimits = (0, float(self.winfo_width()))
+        return CoordinateTransform(xlimits, ylimits,
+                                   canvas_xlimits, canvas_ylimits,
+                                   scale_factor=scaling)
 
     def _plot_ylimits(self):
         min_y, max_y = None, None
@@ -132,7 +138,7 @@ class PlotCanvas(Tkinter.Canvas, object):
 class Axes(object):
     """Axes on a drawing canvas."""
 
-    def __init__(self, xlimits, ylimits):
+    def __init__(self, xlimits, ylimits, xticks=6, yticks=6, grid=True):
         """Consturcts new axes instance.
 
         Args:
@@ -141,25 +147,55 @@ class Axes(object):
         """
         self._xlimits = xlimits
         self._ylimits = ylimits
+        self._xticks = xticks
+        self._yticks = yticks
+        self._grid = grid
 
-    def draw(self, plot_canvas, draw_prefs):
-        x_origin, y_origin = self._xlimits[0], self._ylimits[0]
-        x_top, y_top = self._xlimits[1], self._ylimits[1]
-        x_origin_canv, y_origin_canv = draw_prefs.plot_point(
-            x_origin, y_origin)
-        x_top_canv, y_top_canv = draw_prefs.plot_point(
-            x_top, y_top)
-        logging.debug(('drawing axes at points: origin: {}:{}, '
-                       'X,Y top: {}:{}').format(
-                           x_origin, y_origin, x_top, y_top))
-        logging.debug(('in canvas coordinates: origin: {}:{}, '
-                       'X,Y top: {}:{}').format(
+    def draw(self, plot_canvas, coord_transform):
+        self._draw_grid(plot_canvas, coord_transform)
+        self._draw_axes(plot_canvas, coord_transform)
+        self._draw_yticks(plot_canvas, coord_transform)
+        self._draw_xticks(plot_canvas, coord_transform)
+
+    def _draw_axes(self, plot_canvas, coord_transform):
+        x_origin_canv, y_origin_canv = coord_transform.plot_point(0., 0.)
+        x_top_canv, y_top_canv = coord_transform.plot_point(1., 1.)
+        logging.debug(('drawing axes, plot coorginates: origin: {}:{}, '
+                       'X,Y ends: {}:{}').format(
                            x_origin_canv, y_origin_canv,
                            x_top_canv, y_top_canv))
         plot_canvas.create_line(x_origin_canv, y_origin_canv,
                                 x_origin_canv, y_top_canv, width=2.)
         plot_canvas.create_line(x_origin_canv, y_origin_canv,
                                 x_top_canv, y_origin_canv, width=2.)
+
+    def _draw_grid(self, plot_canvas, coord_transform):
+        if not self._grid:
+            return
+        for i in range(1, self._yticks + 1):
+            pos = 1. / self._yticks * i
+            x1, y1 = coord_transform.plot_point(0., pos)
+            x2, y2 = coord_transform.plot_point(1., pos)
+            plot_canvas.create_line(x1, y1, x2, y2, fill='#E0E0E0')
+        for i in range(1, self._xticks + 1):
+            pos = 1. / self._xticks * i
+            x1, y1 = coord_transform.plot_point(pos, 0.)
+            x2, y2 = coord_transform.plot_point(pos, 1.)
+            plot_canvas.create_line(x1, y1, x2, y2, fill='#E0E0E0')
+
+    def _draw_yticks(self, plot_canvas, coord_transform):
+        for i in range(1, self._yticks + 1):
+            pos = 1. / self._yticks * i
+            x1, y1 = coord_transform.plot_point(-0.01, pos)
+            x2, y2 = coord_transform.plot_point(0.01, pos)
+            plot_canvas.create_line(x1, y1, x2, y2, width=2.)
+
+    def _draw_xticks(self, plot_canvas, coord_transform):
+        for i in range(1, self._xticks + 1):
+            pos = 1. / self._xticks * i
+            x1, y1 = coord_transform.plot_point(pos, -0.01)
+            x2, y2 = coord_transform.plot_point(pos, 0.01)
+            plot_canvas.create_line(x1, y1, x2, y2, width=2.)
 
 
 class Plot(object):
@@ -207,8 +243,9 @@ class Plot(object):
         return res
 
 
-class DrawingPreferences(object):
-    """Holds drawing settings pertaining to PlotCanvas."""
+class CoordinateTransform(object):
+    """Holds drawing settings pertaining to PlotCanvas.
+    Performs coordinates transformation."""
 
     def __init__(self,
                  plot_xlimits=(1., -1.), plot_ylimits=(1., -1.),
@@ -241,17 +278,56 @@ class DrawingPreferences(object):
         """Returns plot X coordinate which corresponds to passed
         data X coordinate.
         """
-        plot_x = (x * self._plot2draw_xfactor * self.scale_factor)
-        plot_x += ((1. - self.scale_factor) / 2.) * self.draw_width
+        plot_x = self._x_to_plot_coord(x)
+        plot_x = self._center_x(self._scale(plot_x))
         return plot_x
 
     def plot_y_coord(self, y):
         """Returns plot Y coordinate which corresponds to passed
         data Y coordinate."""
-        plot_y = (y * self._plot2draw_yfactor) + (self.draw_height / 2)
-        plot_y *= self.scale_factor
-        plot_y += ((1. - self.scale_factor) / 2.) * self.draw_height
+        plot_y = self._y_to_plot_coord(y)
+        plot_y = self._flip_axis(plot_y)
+        plot_y = self._center_y(self._scale(plot_y))
         return plot_y
+
+    def _x_to_plot_coord(self, x):
+        return self._shift_x(self._scale_x_axis_to_plot_coord(x))
+
+    def _y_to_plot_coord(self, x):
+        return self._shift_y(self._scale_y_axis_to_plot_coord(x))
+
+    def _scale_x_axis_to_plot_coord(self, x):
+        return x * self._plot2draw_xfactor
+
+    def _scale_y_axis_to_plot_coord(self, y):
+        return y * self._plot2draw_yfactor
+
+    def _shift_x(self, x):
+        return x - self.plot_xlimits[0] * self._plot2draw_xfactor
+
+    def _shift_y(self, y):
+        return y - self.plot_ylimits[1] * self._plot2draw_yfactor
+
+    def _flip_axis(self, coord):
+        return -coord
+
+    def _scale(self, coord):
+        """Applies scaling factor to coord."""
+        return coord * self.scale_factor
+
+    def _center_x(self, coord):
+        """Adds margin based on current scaling factor to keep
+        objects centered in the drawing area."""
+        return coord + (((1. - self.scale_factor) / 2.) * self.draw_width)
+
+    def _center_y(self, coord):
+        """Adds margin based on current scaling factor to keep
+        objects centered in the drawing area."""
+        return coord + (((1. - self.scale_factor) / 2.) * self.draw_height)
+
+    def _tra(self, coord, amount):
+        """Translate coord by a given amount."""
+        return coord + amount
 
     def _init_factors(self):
         self.draw_width = abs(self.draw_xlimits[1] - self.draw_xlimits[0])
