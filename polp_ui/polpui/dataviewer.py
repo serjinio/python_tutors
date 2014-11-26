@@ -88,6 +88,8 @@ class DataViewerUi(object):
 
         self._frmPlot = ttk.Frame(self._frame)
         self._pltCanvas = PlotCanvas(self._frmPlot)
+        self._pltCanvas.ylabel = 'Amplitude [V]'
+        self._pltCanvas.xlabel = 'Time [us]'
         self._pltCanvas.pack(
             side=TOP, fill=BOTH, expand=1)
 

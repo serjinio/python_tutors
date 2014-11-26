@@ -15,7 +15,7 @@ class PlotCanvasSettings(object):
     def __init__(self):
         """No arg constructor creates default settings object."""
         self.bg_color = '#ffffff'
-        self.margins = 0.08
+        self.margins = 0.12
         self.axes_margins = self.margins / 2.
         self.grid = True
 
@@ -31,6 +31,7 @@ class PlotCanvas(Tkinter.Canvas, object):
         self._parent = parent
         self.plots = []
         self._plot_settings = plot_settings
+        self.xlabel, self.ylabel = None, None
         self._configure_canvas()
 
     def plot(self, x_data, y_data, label=None, xlabel=None, ylabel=None):
@@ -66,7 +67,8 @@ class PlotCanvas(Tkinter.Canvas, object):
         xmin -= xdist * self._plot_settings.margins
         xmax += xdist * self._plot_settings.margins
         scaling = 1. - 2 * self._plot_settings.margins
-        ax = Axes((xmin, xmax), (ymin, ymax))
+        ax = Axes((xmin, xmax), (ymin, ymax), xlabel=self.xlabel,
+                  ylabel=self.ylabel)
         ax.draw(self, self._coord_transform(scaling=scaling))
 
     def _draw_plots(self):
@@ -138,7 +140,8 @@ class PlotCanvas(Tkinter.Canvas, object):
 class Axes(object):
     """Axes on a drawing canvas."""
 
-    def __init__(self, xlimits, ylimits, xticks=6, yticks=6, grid=True):
+    def __init__(self, xlimits, ylimits, xlabel=None,
+                 ylabel=None, xticks=6, yticks=6, grid=True):
         """Consturcts new axes instance.
 
         Args:
@@ -147,6 +150,8 @@ class Axes(object):
         """
         self._xlimits = xlimits
         self._ylimits = ylimits
+        self._xlabel = xlabel
+        self._ylabel = ylabel
         self._xticks = xticks
         self._yticks = yticks
         self._grid = grid
@@ -156,6 +161,10 @@ class Axes(object):
         self._draw_axes(plot_canvas, coord_transform)
         self._draw_yticks(plot_canvas, coord_transform)
         self._draw_xticks(plot_canvas, coord_transform)
+        self._draw_ymarks(plot_canvas, coord_transform)
+        self._draw_xmarks(plot_canvas, coord_transform)
+        self._draw_xlabel(plot_canvas, coord_transform)
+        self._draw_ylabel(plot_canvas, coord_transform)
 
     def _draw_axes(self, plot_canvas, coord_transform):
         x_origin_canv, y_origin_canv = coord_transform.plot_point(0., 0.)
@@ -172,30 +181,62 @@ class Axes(object):
     def _draw_grid(self, plot_canvas, coord_transform):
         if not self._grid:
             return
-        for i in range(1, self._yticks + 1):
+        for i in range(0, self._yticks + 1):
             pos = 1. / self._yticks * i
             x1, y1 = coord_transform.plot_point(0., pos)
             x2, y2 = coord_transform.plot_point(1., pos)
             plot_canvas.create_line(x1, y1, x2, y2, fill='#E0E0E0')
-        for i in range(1, self._xticks + 1):
+        for i in range(0, self._xticks + 1):
             pos = 1. / self._xticks * i
             x1, y1 = coord_transform.plot_point(pos, 0.)
             x2, y2 = coord_transform.plot_point(pos, 1.)
             plot_canvas.create_line(x1, y1, x2, y2, fill='#E0E0E0')
 
     def _draw_yticks(self, plot_canvas, coord_transform):
-        for i in range(1, self._yticks + 1):
+        for i in range(0, self._yticks + 1):
             pos = 1. / self._yticks * i
             x1, y1 = coord_transform.plot_point(-0.01, pos)
             x2, y2 = coord_transform.plot_point(0.01, pos)
             plot_canvas.create_line(x1, y1, x2, y2, width=2.)
 
     def _draw_xticks(self, plot_canvas, coord_transform):
-        for i in range(1, self._xticks + 1):
+        for i in range(0, self._xticks + 1):
             pos = 1. / self._xticks * i
             x1, y1 = coord_transform.plot_point(pos, -0.01)
             x2, y2 = coord_transform.plot_point(pos, 0.01)
             plot_canvas.create_line(x1, y1, x2, y2, width=2.)
+
+    def _draw_ymarks(self, plot_canvas, coord_transform):
+        for i in range(0, self._yticks + 1):
+            pos = 1. / self._yticks * i
+            xpos, ypos = coord_transform.plot_point(-0.055, pos)
+            ycord = self._ylimits[0] + pos * \
+                (self._ylimits[1] - self._ylimits[0])
+            plot_canvas.create_text((xpos, ypos),
+                                    text="{:<6.2f}".format(ycord))
+
+    def _draw_xmarks(self, plot_canvas, coord_transform):
+        for i in range(0, self._yticks + 1):
+            pos = 1. / self._yticks * i
+            xpos, ypos = coord_transform.plot_point(pos, -0.045)
+            xcord = self._xlimits[0] + pos * \
+                (self._xlimits[1] - self._xlimits[0])
+            plot_canvas.create_text((xpos, ypos),
+                                    text="{:6.2f}".format(xcord))
+
+    def _draw_xlabel(self, plot_canvas, coord_transform):
+        if self._xlabel is None:
+            return
+        xpos, ypos = coord_transform.plot_point(0.5, -0.1)
+        plot_canvas.create_text((xpos, ypos),
+                                text=self._xlabel)
+
+    def _draw_ylabel(self, plot_canvas, coord_transform):
+        if self._ylabel is None:
+            return
+        xpos, ypos = coord_transform.plot_point(0.0, 1.07)
+        plot_canvas.create_text((xpos, ypos),
+                                text=self._ylabel)
 
 
 class Plot(object):
