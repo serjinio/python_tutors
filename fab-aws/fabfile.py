@@ -10,6 +10,7 @@ env.user = 'root'
 env.dotfiles_dir = '../../dotfiles'
 env.screenrc_config = os.path.join(env.dotfiles_dir, 'screenrc')
 env.emacs_config = os.path.join(env.dotfiles_dir, 'emacs')
+env.subversion_config = os.path.join(env.dotfiles_dir, 'subversion-config')
 
 
 logging.basicConfig(level=logging.WARN,
@@ -26,7 +27,7 @@ def setup():
     setup_mosh()
     setup_screen()
     setup_emacs()
-    
+    setup_subversion()
 
 ############################################################
 # Helpers
@@ -34,7 +35,7 @@ def setup():
 
 
 def setup_mosh():
-    run('yum install mosh')
+    run('yum -y install mosh')
 
 
 def setup_screen():
@@ -54,3 +55,14 @@ def setup_emacs():
         logging.warn(('Cannot setup emacs on target host, config file "{}"'
                       'missing on local host!').format(env.emacs_config))
 
+
+def setup_subversion():
+    run('mkdir -p ~/.subversion')
+    put_file(env.subversion_config, '~/.subversion/config')
+
+
+def put_file(f, dest_path):
+    if not os.path.exists(f):
+        logging.warn(('Cannot copy "{}" to destination path: "{}".')
+                     .format(f, dest_path))
+    put(f, dest_path)
