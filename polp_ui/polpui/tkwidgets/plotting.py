@@ -256,14 +256,9 @@ class Plot(object):
           plotCanvas (PlotCanvas): A plotting canvas to draw into.
         """
         logging.debug('drawing "{}" dataset...'.format(self._dataset.title))
-        prev_x, prev_y = None, None
-        for x, y in draw_prefs.plot_points(
-                self._dataset.x_data, self._dataset.y_data):
-            if prev_x is None:
-                prev_x, prev_y = x, y
-                continue
-            plot_canvas.create_line(prev_x, prev_y, x, y)
-            prev_x, prev_y = x, y
+        coords = draw_prefs.plot_points(
+            self._dataset.x_data, self._dataset.y_data)
+        plot_canvas.create_line(coords)
 
     def xlimits(self):
         """Return min & max X coordinates on this plot."""
@@ -375,8 +370,14 @@ class CoordinateTransform(object):
         self.draw_height = abs(self.draw_ylimits[1] - self.draw_ylimits[0])
         self.plot_width = abs(self.plot_xlimits[1] - self.plot_xlimits[0])
         self.plot_height = abs(self.plot_ylimits[1] - self.plot_ylimits[0])
-        self._plot2draw_yfactor = self.draw_height / self.plot_height
-        self._plot2draw_xfactor = self.draw_width / self.plot_width
+        try:
+            self._plot2draw_yfactor = self.draw_height / self.plot_height
+        except:
+            self._plot2draw_yfactor = 1.
+        try:
+            self._plot2draw_xfactor = self.draw_width / self.plot_width
+        except:
+            self._plot2draw_xfactor = 1.
 
     def __str__(self):
         res = 'Drawing preferences:\n'

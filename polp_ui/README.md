@@ -1,7 +1,9 @@
 Polp
 ====
 
-Dependencies:
+Small app for data taking with viewer.
 
-	# only for viewer module, main app uses only standard Python library
-	pip install numpy matplotlib 
+Dependencies
+------------
+
+Application uses only standard Python library.

@@ -102,16 +102,33 @@ def _load_dat(filepath):
                 raise ValueError(('File provided: "{}" does not seem to be '
                                   'a valid .dat file, load aborted.')
                                  .format(filepath))
-            # only rows with six columns should be valid
-            if len(row) == 6:
-                x_data.append(float(row[0]) * 1e6)
-                y_data.append(complex(float(row[1]), float(row[2])))
+            if len(row) >= 3:
+                try:
+                    x_data.append(float(row[0]) * 1e6)
+                    y_data.append(complex(float(row[1]), float(row[2])))
+                except:
+                    logging.warn('failed to load data row: {}'.format(row))
+                    errors_count += 1
             else:
                 errors_count += 1
+    logging.debug('error count in data file: {}'.format(errors_count))
     dataset = DataSet(x_data, y_data, os.path.basename(filepath),
                       'Time [us]', 'Amplitude [V]')
     logging.debug('read data: \n{}'.format(dataset))
     return dataset
+
+
+def reduce_dataset(dataset):
+    """Reduces dataset size to at max 1500 points to make it
+    faster to plot. This might discard some sharp peaks in the plot."""
+    draw_stride = 1. if len(dataset) < 750 else \
+        int(len(dataset) / 750.)
+    x_data = [x for idx, x in enumerate(dataset.x_data)
+              if idx % draw_stride == 0]
+    y_data = [y for idx, y in enumerate(dataset.y_data)
+              if idx % draw_stride == 0]
+    return DataSet(x_data, y_data, dataset.title,
+                   dataset.x_data_name, dataset.y_data_name)
 
 
 class DataStorePrefs(object):
@@ -166,13 +183,27 @@ class DataSet(object):
 
     def __init__(self, x_data, y_data, title='',
                  x_data_name='Argument', y_data_name='Value'):
-        self.x_data = x_data
-        self.y_data = y_data
+        self._x_data = x_data
+        self._y_data = y_data
         self.title = title
         self.x_data_name = x_data_name
         self.y_data_name = y_data_name
         self._validate()
 
+    @property
+    def x_data(self):
+        if len(self._x_data) > 0:
+            return self._x_data
+        else:
+            return [0., 0.]
+
+    @property
+    def y_data(self):
+        if len(self._y_data) > 0:
+            return self._y_data
+        else:
+            return [0., 0.]
+    
     def is_y_data_complex(self):
         if len(self.y_data) == 0:
             return False
@@ -232,7 +263,7 @@ class DataSet(object):
         return len(self.x_data)
 
 
-INVALID_DATA_SET = DataSet([], [], 'Bad dataset')
+INVALID_DATA_SET = DataSet([0., 0.], [0., 0.], 'Bad dataset')
 
 
 def _configure_logging():

@@ -6,29 +6,22 @@ tasks for nmr acquisition
 import logging
 import os
 import tempfile
-import subprocess
 import shutil
 
 from polpui import config
+from polpui.tasks.common import execute
 
 
 def acquire(datastore_prefs):
     logging.info('starting NMR acquisition...')
-    # _check_exists(config.DO_NMR_EXEC)
     prepare_datastore_path(datastore_prefs.path)
     try:
         tmpdir = tempfile.mkdtemp(prefix='nmr_')
         datafile_path = get_next_datafile_path(datastore_prefs)
         tmp_datafile_path = os.path.join(tmpdir, config.NMR_DATA_FILE_NAME)
-        # rc = subprocess.call(config.DO_NMR_EXEC, cwd=tmpdir)
+        execute(config.DO_NMR_EXEC, cwd=tmpdir)
         # to mock real process
-        rc = subprocess.call(['touch', '.saveise'], cwd=tmpdir)
-        if rc != 0:
-            raise RuntimeWarning(('NMR data acquisition subprocess returned '
-                                  'non-zero code.'))
-        if not os.path.exists(tmp_datafile_path):
-            raise RuntimeWarning(('Cannot find NMR data file: "{}"').format(
-                tmp_datafile_path))
+        # execute(['touch', '.saveise'], cwd=tmpdir)
         shutil.copyfile(tmp_datafile_path, datafile_path)
     finally:
         shutil.rmtree(tmpdir)
@@ -79,9 +72,3 @@ def get_last_datafile_number(datastore_prefs):
 def _configure_logging():
     program_path = os.path.dirname(os.path.realpath(__file__))
     logging.config.fileConfig(os.path.join(program_path, 'logging.cfg'))
-
-
-def _check_exists(exec_path):
-    if not os.path.exists(exec_path):
-        raise RuntimeWarning('executable does not exists: "{}"'.format(
-            exec_path))
