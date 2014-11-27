@@ -9,9 +9,10 @@ import tkFileDialog
 import ttk
 from tkwidgets.plotting import PlotCanvas
 
+import cProfile
 
 from common import list_files_matching_extension, load_data_file, \
-    INVALID_DATA_SET
+    INVALID_DATA_SET, reduce_dataset
 
 
 def data_viewer(folder=os.getcwd(), parent=None):
@@ -73,9 +74,9 @@ class DataViewerUi(object):
         self._frame = ttk.Frame(self.window)
 
         self._btnChangeDir = ttk.Button(
-            self._frame, text="Change Dir.", command=self._select_dir)
+            self._frame, text="CD", command=self._select_dir)
         self._entCurrentDir = ttk.Entry(
-            self._frame, textvariable=self._varCurrentDir, width=25)
+            self._frame, textvariable=self._varCurrentDir)
         self._entCurrentDir.configure(state='readonly')
 
         self._lstFiles = Listbox(self._frame,
@@ -95,14 +96,15 @@ class DataViewerUi(object):
 
         self.window.rowconfigure(0, weight=100)
         self.window.columnconfigure(0, weight=100)
-        self._frame.columnconfigure(1, weight=19)
-        self._frame.columnconfigure(3, weight=80)
+        self._frame.columnconfigure(1, weight=17)
+        self._frame.columnconfigure(3, weight=83)
         self._frame.rowconfigure(1, weight=99)
         self._frame.grid(row=0, column=0, sticky=(N, W, E, S))
         self._btnChangeDir.grid(
-            column=0, row=0, padx=5, pady=10, sticky=(N, W, E, S))
+            column=0, row=0, padx=5, pady=10, sticky=N)
+        self._btnChangeDir.config(width=3)
         self._entCurrentDir.grid(
-            column=1, row=0, columnspan=2, padx=5, pady=10,
+            column=1, row=0, columnspan=2, padx=0, pady=10,
             sticky=(N, W, E, S))
         self._lblDataView.grid(
             column=3, row=0, pady=5, padx=5,
@@ -159,7 +161,8 @@ class DataViewerUi(object):
     def _load_dataset(self, filepath):
         try:
             return load_data_file(filepath)
-        except ValueError:
+        except ValueError as e:
+            logging.warn('Error occured during dataset load: {}'.format(e))
             return INVALID_DATA_SET
 
     def _draw_plot(self, dataset):
@@ -176,14 +179,15 @@ class DataViewerUi(object):
         # ax.grid()
 
     def _plot_dataset(self, canvas, dataset):
-        if dataset.is_y_data_complex():
-            real_part = [c.real for c in dataset.y_data]
-            imag_part = [c.imag for c in dataset.y_data]
-            canvas.plot(dataset.x_data, real_part, label='Re')
-            canvas.plot(dataset.x_data, imag_part, label='Im')
+        reduced_dataset = reduce_dataset(dataset)
+        if reduced_dataset.is_y_data_complex():
+            real_part = [c.real for c in reduced_dataset.y_data]
+            imag_part = [c.imag for c in reduced_dataset.y_data]
+            canvas.plot(reduced_dataset.x_data, real_part, label='Re')
+            canvas.plot(reduced_dataset.x_data, imag_part, label='Im')
         else:
-            canvas.plot(dataset.x_data, dataset.y_data)
-
+            canvas.plot(reduced_dataset.x_data, reduced_dataset.y_data)
+        
     def _exit(self):
         self.window.destroy()
 

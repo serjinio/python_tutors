@@ -256,14 +256,9 @@ class Plot(object):
           plotCanvas (PlotCanvas): A plotting canvas to draw into.
         """
         logging.debug('drawing "{}" dataset...'.format(self._dataset.title))
-        prev_x, prev_y = None, None
-        for x, y in draw_prefs.plot_points(
-                self._dataset.x_data, self._dataset.y_data):
-            if prev_x is None:
-                prev_x, prev_y = x, y
-                continue
-            plot_canvas.create_line(prev_x, prev_y, x, y)
-            prev_x, prev_y = x, y
+        coords = draw_prefs.plot_points(
+            self._dataset.x_data, self._dataset.y_data)
+        plot_canvas.create_line(coords)
 
     def xlimits(self):
         """Return min & max X coordinates on this plot."""

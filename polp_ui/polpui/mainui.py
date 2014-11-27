@@ -12,6 +12,7 @@
 import os
 import datetime
 from Tkinter import *
+import tkFileDialog
 import ttk
 import logging
 import logging.config
@@ -92,38 +93,51 @@ class NmrControlUi(object):
         self._parent.columnconfigure(1, weight=40)
         self._parent.columnconfigure(3, weight=40)
 
-        ttk.Label(self._parent, text='Data folder:').grid(
-            column=0, row=0, sticky=E)
+        self._lblDataFolder = ttk.Label(self._parent, text='Data folder:')
+        self._btnChangeDir = ttk.Button(
+            self._parent, text="CD", command=self._select_dir)
         self._entDataFolder = ttk.Entry(
-            self._parent, textvariable=self._varDataFolder, width=40)
-        self._entDataFolder.grid(
-            column=1, row=0, columnspan=4, padx=5, sticky=(E, W))
-
-        ttk.Label(self._parent, text='File name format:').grid(
-            column=0, row=1, pady=5, sticky=E)
+            self._parent, textvariable=self._varDataFolder)
+        
+        self._lblFileNameFormat = ttk.Label(self._parent,
+                                            text='File name format:')
         self._entDataFileNamePrefix = ttk.Entry(
-            self._parent, textvariable=self._varDataFileNamePrefix).grid(
-                column=1, row=1, padx=5, sticky=(E, W))
-        ttk.Label(self._parent, text='###').grid(
-            column=2, row=1, padx=5, sticky=(E, W))
+            self._parent, textvariable=self._varDataFileNamePrefix)
+        self._lblDataFileNumber = ttk.Label(self._parent, text='###')
         self._entDataFileNameSuffix = ttk.Entry(
-            self._parent, textvariable=self._varDataFileNameSuffix).grid(
-                column=3, row=1, columnspan=2, padx=5, sticky=(E, W))
-
-        ttk.Label(self._parent, text='Last data file:').grid(
-            column=0, row=2, pady=5, sticky=E)
+            self._parent, textvariable=self._varDataFileNameSuffix)
+        self._lblLastDataFile = ttk.Label(self._parent,
+                                          text='Last data file:')
         self._entDataFile = ttk.Entry(
             self._parent, textvariable=self._varDataFile)
-        self._entDataFile.grid(
-            column=1, row=2, columnspan=4, padx=5, sticky=(E, W))
-        self._entDataFile.configure(state='readonly')
-
+        
         self._btnNmr = ttk.Button(self._parent, text="NMR",
                                   command=self._take_nmr)
-        self._btnNmr.grid(column=3, row=3, sticky=E, pady=10)
         self._btnView = ttk.Button(self._parent, text="View",
                                    command=self._view_data)
-        self._btnView.grid(column=4, row=3, sticky=E, pady=10, padx=5)
+                
+        self._lblDataFolder.grid(column=0, row=0, sticky=E)
+        self._lblFileNameFormat.grid(
+            column=0, row=1, pady=5, sticky=E)
+        self._entDataFileNamePrefix.grid(
+            column=1, row=1, padx=5, sticky=(E, W))
+        self._lblDataFileNumber.grid(
+            column=2, row=1, padx=5, sticky=(E, W))
+        self._entDataFileNameSuffix.grid(
+            column=3, row=1, columnspan=3, padx=5, sticky=(E, W))
+        self._entDataFile.grid(
+            column=1, row=2, columnspan=5, padx=5, sticky=(E, W))
+        self._entDataFile.configure(state='readonly')
+        self._entDataFolder.grid(
+            column=1, row=0, columnspan=4, padx=5, sticky=(E, W))
+        self._btnChangeDir.grid(
+            column=5, row=0, padx=0)
+        self._btnChangeDir.config(width=3)
+        self._lblLastDataFile.grid(
+            column=0, row=2, pady=5, sticky=E)
+        self._btnNmr.grid(column=3, row=3, sticky=E, pady=10)
+        self._btnView.grid(column=4, columnspan=2, row=3, sticky=E,
+                           pady=10, padx=5)
 
     def _take_nmr(self, *args):
         data_file = nmr.acquire(DataStorePrefs(
@@ -133,6 +147,11 @@ class NmrControlUi(object):
         if self._is_dataviewer_open():
             self._dataviewer.show_data_file(data_file)
 
+    def _select_dir(self):
+        new_dir = tkFileDialog.askdirectory()
+        if new_dir:
+            self._varDataFolder.set(new_dir)
+        
     def _is_dataviewer_open(self):
         return self._dataviewer is not None and \
             self._dataviewer.window.winfo_exists()
