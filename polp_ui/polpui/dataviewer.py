@@ -168,25 +168,19 @@ class DataViewerUi(object):
     def _draw_plot(self, dataset):
         self._pltCanvas.clear()
         self._plot_dataset(self._pltCanvas, dataset)
-        self._plot_setup_attrs(self._pltCanvas, dataset)
-
-    def _plot_setup_attrs(self, canvas, dataset):
-        pass
-        # ax.set_title(dataset.title)
-        # ax.set_xlabel(dataset.x_data_name)
-        # ax.set_ylabel(dataset.y_data_name)
-        # ax.legend()
-        # ax.grid()
 
     def _plot_dataset(self, canvas, dataset):
         reduced_dataset = reduce_dataset(dataset)
         if reduced_dataset.is_y_data_complex():
             real_part = [c.real for c in reduced_dataset.y_data]
             imag_part = [c.imag for c in reduced_dataset.y_data]
-            canvas.plot(reduced_dataset.x_data, real_part, label='Re')
-            canvas.plot(reduced_dataset.x_data, imag_part, label='Im')
+            canvas.plot(reduced_dataset.x_data, real_part,
+                        label='{} - Re'.format(dataset.title))
+            canvas.plot(reduced_dataset.x_data, imag_part,
+                        label='{} - Im'.format(dataset.title))
         else:
-            canvas.plot(reduced_dataset.x_data, reduced_dataset.y_data)
+            canvas.plot(reduced_dataset.x_data, reduced_dataset.y_data,
+                        label=dataset.title)
         
     def _exit(self):
         self.window.destroy()

@@ -183,13 +183,27 @@ class DataSet(object):
 
     def __init__(self, x_data, y_data, title='',
                  x_data_name='Argument', y_data_name='Value'):
-        self.x_data = x_data
-        self.y_data = y_data
+        self._x_data = x_data
+        self._y_data = y_data
         self.title = title
         self.x_data_name = x_data_name
         self.y_data_name = y_data_name
         self._validate()
 
+    @property
+    def x_data(self):
+        if len(self._x_data) > 0:
+            return self._x_data
+        else:
+            return [0., 0.]
+
+    @property
+    def y_data(self):
+        if len(self._y_data) > 0:
+            return self._y_data
+        else:
+            return [0., 0.]
+    
     def is_y_data_complex(self):
         if len(self.y_data) == 0:
             return False
@@ -249,7 +263,7 @@ class DataSet(object):
         return len(self.x_data)
 
 
-INVALID_DATA_SET = DataSet([], [], 'Bad dataset')
+INVALID_DATA_SET = DataSet([0., 0.], [0., 0.], 'Bad dataset')
 
 
 def _configure_logging():

@@ -2,18 +2,19 @@
 Routines common to all tasks.
 """
 
+import os
 import logging
 import subprocess
 
 
-def execute(command):
-    _check_cmd_return_code(_execute_cmd(command))
+def execute(command, cwd=os.getcwd()):
+    _check_cmd_return_code(command, *_execute_cmd(command, cwd=cwd))
         
 
-def _execute_cmd(command):
+def _execute_cmd(command, cwd=os.getcwd()):
     try:
         process = subprocess.Popen(command, stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+                                   stderr=subprocess.PIPE, cwd=cwd)
         out, err = process.communicate()
         return (process.returncode, out, err)
     except Exception as e:
