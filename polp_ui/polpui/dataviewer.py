@@ -1,6 +1,7 @@
 
 
 import os
+import math
 import logging
 import logging.config
 
@@ -8,8 +9,6 @@ from Tkinter import *
 import tkFileDialog
 import ttk
 from tkwidgets.plotting import PlotCanvas
-
-import cProfile
 
 from common import list_files_matching_extension, load_data_file, \
     INVALID_DATA_SET, reduce_dataset
@@ -167,21 +166,39 @@ class DataViewerUi(object):
 
     def _draw_plot(self, dataset):
         self._pltCanvas.clear()
-        self._plot_dataset(self._pltCanvas, dataset)
+        self._plot_dataset(dataset)
 
-    def _plot_dataset(self, canvas, dataset):
+    def _plot_dataset(self, dataset):
         reduced_dataset = reduce_dataset(dataset)
-        if reduced_dataset.is_y_data_complex():
-            real_part = [c.real for c in reduced_dataset.y_data]
-            imag_part = [c.imag for c in reduced_dataset.y_data]
-            canvas.plot(reduced_dataset.x_data, real_part,
-                        label='{} - Re'.format(dataset.title))
-            canvas.plot(reduced_dataset.x_data, imag_part,
-                        label='{} - Im'.format(dataset.title))
+        if 'lgr' in reduced_dataset.title:
+            self._plot_frequency_dataset(dataset)
         else:
-            canvas.plot(reduced_dataset.x_data, reduced_dataset.y_data,
-                        label=dataset.title)
-        
+            self._plot_time_dataset(dataset)
+
+    def _plot_frequency_dataset(self, dataset):
+        logging.debug('plotting frequency dataset: {}'.format(dataset.title))
+        real_part = [c.real for c in dataset.y_data]
+        decibels = [20. * math.log(a) for a in real_part]
+        self._pltCanvas.ylabel = '[dB]'
+        self._pltCanvas.xlabel = 'Frequency [Hz]'
+        self._pltCanvas.plot(dataset.x_data, decibels,
+                             label='{} - S11'.format(dataset.title))
+
+    def _plot_time_dataset(self, dataset):
+        logging.debug('plotting time dataset: {}'.format(dataset.title))
+        self._pltCanvas.ylabel = 'Amplitude [V]'
+        self._pltCanvas.xlabel = 'Time [us]'
+        if dataset.is_y_data_complex():
+            real_part = [c.real for c in dataset.y_data]
+            imag_part = [c.imag for c in dataset.y_data]
+            self._pltCanvas.plot(dataset.x_data, real_part,
+                                 label='{} - Re'.format(dataset.title))
+            self._pltCanvas.plot(dataset.x_data, imag_part,
+                                 label='{} - Im'.format(dataset.title))
+        else:
+            self._pltCanvas.plot(dataset.x_data, dataset.y_data,
+                                 label=dataset.title)
+
     def _exit(self):
         self.window.destroy()
 

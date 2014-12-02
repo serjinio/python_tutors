@@ -1,8 +1,8 @@
-############################################################
-# Module with common routines for polp app
-############################################################
+"""
+Module with common routines for polp app
+"""
 
-
+import polpui.mainui
 import os
 import os.path
 import numbers

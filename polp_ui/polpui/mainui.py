@@ -1,12 +1,12 @@
-############################################################
-# UI front-end for polp:
-#  - acquisition of NMR signals
-#  - MW system control: turn on  polarization cycle
-#
-# all hardware functions are handled by respective utilities
-# written separately from this module. This module only
-# contains UI elements for user interaction
-############################################################
+"""
+UI front-end for polp:
+ - acquisition of NMR signals
+ - MW system control: turn on  polarization cycle
+
+all hardware functions are handled by respective utilities
+written separately from this application. It only
+contains UI front-end for user interaction.
+"""
 
 
 import os
@@ -98,7 +98,7 @@ class NmrControlUi(object):
             self._parent, text="CD", command=self._select_dir)
         self._entDataFolder = ttk.Entry(
             self._parent, textvariable=self._varDataFolder)
-        
+
         self._lblFileNameFormat = ttk.Label(self._parent,
                                             text='File name format:')
         self._entDataFileNamePrefix = ttk.Entry(
@@ -110,12 +110,12 @@ class NmrControlUi(object):
                                           text='Last data file:')
         self._entDataFile = ttk.Entry(
             self._parent, textvariable=self._varDataFile)
-        
+
         self._btnNmr = ttk.Button(self._parent, text="NMR",
                                   command=self._take_nmr)
         self._btnView = ttk.Button(self._parent, text="View",
                                    command=self._view_data)
-                
+
         self._lblDataFolder.grid(column=0, row=0, sticky=E)
         self._lblFileNameFormat.grid(
             column=0, row=1, pady=5, sticky=E)
@@ -151,7 +151,7 @@ class NmrControlUi(object):
         new_dir = tkFileDialog.askdirectory()
         if new_dir:
             self._varDataFolder.set(new_dir)
-        
+
     def _is_dataviewer_open(self):
         return self._dataviewer is not None and \
             self._dataviewer.window.winfo_exists()
