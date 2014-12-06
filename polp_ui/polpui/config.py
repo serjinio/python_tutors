@@ -3,8 +3,8 @@
 ############################################################
 
 # Storage of acquired NMR signals
-NMR_DATA_DIR = '/mnt/hgfs/lab_data/2013/0919'
-NMR_DATA_DIR_APPEND_DATE_SUFFIX = False
+NMR_DATA_DIR = '/home/polp/data/2014/'
+NMR_DATA_DIR_APPEND_DATE_SUFFIX = True
 
 NMR_FILENAME_PREFIX = 'nmr-'
 NMR_FILENAME_SUFFIX = '.dat'
@@ -17,4 +17,4 @@ MW_OFF_EXEC = '/home/polp/GPIB/src/mwoff'
 
 # creates .saveise in the current directory
 DO_NMR_EXEC = '/home/polp/GPIB/src/nmr'
-NMR_DATA_FILE_NAME = '.saveise'
+NMR_DATA_FILE_NAME = 'ise0.dat'
