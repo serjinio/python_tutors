@@ -1,10 +1,20 @@
+/**
+   Program calculates MW & NMR frequencies or ISE process.
+   
+   Result gets written to standard output in the following format:
+     1st column: MW frequency (MHz)
+     2nd column: NMR frequency for lower transition (MHz)
+     3rd column: Magnetic field strength for lower transition (mT)
+     4th column: NMR frequency for higher transition (MHz)
+     5th column: Magnetic field strength for higher transition (mT)
+**/
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
 
 
-// constants for calcution of frequencies for
+// constants for calculation of frequencies for
 // p-terphenyl host crystal
 double const X_PTERPH = 518.54;
 double const Y_PTERPH = 411.84;
