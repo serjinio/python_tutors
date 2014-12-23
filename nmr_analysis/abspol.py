@@ -19,9 +19,11 @@ pd.options.display.mpl_style = 'default'
 
 NMR_SIGNALS_DATA_FOLDER = ('/Users/serj/Dropbox/RIKEN - Spin-isospin '
                            'lab materials/lab data/2013/0719/')
-sample_water_signal = ('/Users/serj/projects/polp_data/1209/water-11.smd')
-sample_naph_signal = ('/Users/serj/Dropbox/RIKEN - Spin-isospin '
-                      'lab materials/lab data/2013/0925/ise44.dat')
+water_signal = ('/Users/serj/projects/polp_data/1211/water-15.smd')
+# naph_signal = ('/Users/serj/Dropbox/RIKEN - Spin-isospin '
+#                 'lab materials/lab data/2013/0925/ise44.dat')
+naph_signal = ('/Users/serj/projects/polp_data/1220/ise36.dat')
+# naph_signal = ('/Users/serj/projects/polp_data/2013/0920/ise28.dat')
 
 
 ############################################################
@@ -80,6 +82,11 @@ def water_term_pol(B0, T):
     pol /= (2 * k * T)
     return pol
 
+    
+def naph_pol(fid):
+    """Returns polarization signal from naphthalene FID in a.u."""
+    return integrate_fft(fft(fid))
+    
     
 # Private members
 ############################################################
@@ -172,36 +179,59 @@ MAG_MOMENT_RATIO = water_mag_moment / naph_mag_moment
 # this one assumes that samples with equal amount of protons
 N_RATIO = 1.
 
+# Setup-specific correction for water signal.
+# In this case ratio of signals from bottle to signal from
+# reference sponge as we cannot get signal with
+# necessarily short decay time from sponge - it is too weak.
+WATER_SIGNAL_CORRECTION_FACTOR = 0.1535
+# WATER_SIGNAL_CORRECTION_FACTOR = 1.
+
 # electronic gain difference during water and signals 6He acquisition
 # G_w / G_naph
 # PAmp + main_amp [dB]
-G_w = 30. + 80.
+G_w = 30. + 70.
 # just main_amp [dB]
-G_naph = 70.
+
+# last year
+# G_naph = 70.
+# this year
+G_naph = 30 + 50.
+
 ELECTRONIC_GAIN_RATIO = 10 ** ((G_w - G_naph) / 20.)
 
 # water thermal pol
 WATER_POL = water_term_pol(0.1, 295)
 
 # small spin flip during naph pol. measurement [deg]
-SMALL_SPIN_FLIP = 4.78
+# SPIN_FLIP_ANGLE = 4.78
+SPIN_FLIP_ANGLE = 90.
 
 
-def get_abs_pol():
-    water, naph = load(sample_water_signal), load(sample_naph_signal)
-
-    # polarization ration between naph and water: S_6He / S_w
-    naph = naph * (1 / np.sin(np.radians(SMALL_SPIN_FLIP)))
-    water_fft, naph_fft = fft(water[850:]), fft(naph[1100:])
-    pol_ratio = integrate_fft(naph_fft) / integrate_fft(water_fft)
-
+def compute_polarization():
+    water, naph = load(water_signal), load(naph_signal)
+    water = water[1382:]
+    naph = naph[1400:]
+    water *= 10 ** (-G_w / 20.)
+    naph *= 10 ** (-G_naph / 20.)
+    water = water * WATER_SIGNAL_CORRECTION_FACTOR
+    naph = naph * (1 / np.sin(np.radians(SPIN_FLIP_ANGLE)))
+    # polarization ratio between naph and water: S_6He / S_w
+    water_fft, naph_fft = fft(water), fft(naph)
+    plot_signals(water, naph, water_fft, naph_fft)
+    naph_int, water_int = integrate_fft(naph_fft), integrate_fft(water_fft)
+    pol_ratio = naph_int / water_int
     # 6He polarization
-    full_pol_ratio = MAG_MOMENT_RATIO * N_RATIO * \
-        ELECTRONIC_GAIN_RATIO * pol_ratio
+    full_pol_ratio = MAG_MOMENT_RATIO * N_RATIO * pol_ratio
     abs_pol = WATER_POL * full_pol_ratio * 100
     
-    return full_pol_ratio, abs_pol
+    return naph_int, water_int, full_pol_ratio, abs_pol
 
+
+def plot_signals(water, naph, water_fft, naph_fft):
+    water.plot(title='H2O FID')
+    np.abs(water_fft).plot(title='H20 FFT')
+    naph.plot(title='Naph. FID')
+    np.abs(naph_fft).plot(title='Naph. FFT')
     
 if __name__ == '__main__':
     configure_logging()
@@ -210,18 +240,23 @@ if __name__ == '__main__':
     print '  Magnetic moments ratio: {:.2f}'.format(MAG_MOMENT_RATIO)
     print '  # protons ratio: {:.2f}'.format(N_RATIO)
     print '  electronic gain ratio: {:.2f}'.format(ELECTRONIC_GAIN_RATIO)
+    print '  Water signal correction factor: {:.4f}'.format(
+        WATER_SIGNAL_CORRECTION_FACTOR)
     print ('  Naphthalene spin flip angle (a): {:.2f} '
            '[deg] (1/sin(a): {:.2f})').format(
-               SMALL_SPIN_FLIP, 1 / np.sin(np.radians(SMALL_SPIN_FLIP)))
+               SPIN_FLIP_ANGLE, 1 / np.sin(np.radians(SPIN_FLIP_ANGLE)))
     
-    pol_ratio, abs_pol = get_abs_pol()
+    naphthalene_pol, water_pol, pol_ratio, abs_pol = compute_polarization()
     print 'Polarization:'
+    print '  Naphthalene polarization [a.u.]: {:.4e} ' \
+        .format(naphthalene_pol)
+    print '  Water polarization [a.u.]: {:.4e} ' \
+        .format(water_pol)
     print '  Polarization ratio of naph vs water: {:.2f}' \
         .format(pol_ratio)
     print '  Napthalene polarization = {:.4f} %'.format(abs_pol)
 
-    water, naph = load(sample_water_signal), \
-        load(sample_naph_signal)
-    naph = naph * (1 / np.sin(np.radians(SMALL_SPIN_FLIP)))
+    water, naph = load(water_signal), \
+        load(naph_signal)
+    naph = naph * (1 / np.sin(np.radians(SPIN_FLIP_ANGLE)))
     water_fft, naph_fft = fft(water), fft(naph)
-
