@@ -82,14 +82,8 @@ class DataViewer(object):
         self._panes.add(self._leftPaneFrame)
         self._panes.add(self._rightPaneFrame)
 
-        self._lblShowData = ttk.Label(self._leftPaneFrame, text='Show:')
-        self._rbtShowAll = ttk.Radiobutton(
-            self._leftPaneFrame, text='All', variable=self._varShowMode,
-            value=self.SHOW_ALL)
-        self._rbtShowSelected = ttk.Radiobutton(
-            self._leftPaneFrame, text='Selected', variable=self._varShowMode,
-            value=self.SHOW_SELECTED)
-
+        self._lblShowData = ttk.Label(self._leftPaneFrame,
+                                      text='Data objects:')
         self._lstObjects = tk.Listbox(self._leftPaneFrame,
                                       listvariable=self._varObjects,
                                       selectmode=tk.EXTENDED)
@@ -116,12 +110,6 @@ class DataViewer(object):
         self._leftPaneFrame.rowconfigure(1, weight=99)
         self._lblShowData.grid(
             column=0, row=0, padx=5, pady=10, sticky=(tk.N, tk.W, tk.S))
-        self._rbtShowAll.grid(
-            column=1, row=0, columnspan=1, padx=0, pady=10,
-            sticky=(tk.N, tk.W, tk.S))
-        self._rbtShowSelected.grid(
-            column=2, row=0, columnspan=1, padx=0, pady=10,
-            sticky=(tk.N, tk.W, tk.S))
         self._lstObjects.grid(column=0, columnspan=3, row=1, padx=5,
                               pady=5, sticky=(tk.N, tk.W, tk.E, tk.S))
         self._scrFiles.grid(column=50, row=1, pady=5, sticky=(tk.N, tk.S))

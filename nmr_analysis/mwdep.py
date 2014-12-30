@@ -45,7 +45,7 @@ def compute_mwdep():
         fid = load(fid_filepath)
         res = process_fid(fid)
         values.append(res)
-    return pd.DataFrame(values, columns=['I'])
+    return pd.DataFrame(values, columns=['P'])
 
 
 if __name__ == '__main__':
@@ -65,4 +65,4 @@ if __name__ == '__main__':
     dv.add_object(ft_cut, "FFT cut: " + os.path.basename(fid_file))
 
     mwdep = compute_mwdep()
-    dv.add_object(mwdep, 'FID int: ' + os.path.basename(fid_file))
+    dv.add_object(mwdep, 'Pol.(P_mw)')
