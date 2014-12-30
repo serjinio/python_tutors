@@ -5,14 +5,14 @@ Module with data analysis routines.
 import os
 import pandas as pd
 import numpy as np
-# from scipy import integrate
-# from scipy import constants
+from scipy import integrate
+from scipy import constants
 
 import logging
 
-import common
-import dataio
-import datavis
+from nmran import common
+from nmran import dataio
+from nmran import datavis
 
 
 def show_dir_fft(path):

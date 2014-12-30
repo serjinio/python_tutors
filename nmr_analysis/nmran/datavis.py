@@ -180,10 +180,7 @@ class DataViewer(object):
 
     def _draw_object(self, obj, name):
         ax = self._mplFigure.add_subplot('111')
-        if isinstance(obj, pd.DataFrame):
-            self._draw_pd_dataframe(obj, name, ax)
-        else:
-            pass
+        self._draw_pd_dataframe(obj, name, ax)
         ax.legend()
         self.refresh()
 
