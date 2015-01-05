@@ -11,7 +11,7 @@ from nmran.datavis import data_viewer
 from nmran import common
 
 
-data_dir = '/home/serj/Desktop/0925/'
+data_dir = '/Users/serj/projects/polp_data'
 mwdep_fids = [
     'ise25.dat',
     'ise15.dat'
