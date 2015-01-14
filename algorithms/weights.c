@@ -97,20 +97,20 @@ static bool is_already_used_item(int item_idx, int seq_length, IntTable *parents
 
   while ((idx = int_table_get(parents, seq_length, idx)) != -1) {
     if (item_idx == idx) {
-      printf("element with index %i already used in parent sequence\n", idx);
+      //printf("element with index %i already used in parent sequence\n", idx);
       return true;
     }
     seq_length -= 1;
   }
 
-  printf("element with index %i is not used in parent sequence\n", item_idx);
+  // printf("element with index %i is not used in parent sequence\n", item_idx);
   return false;
 }
 
 int find_parent(int seq_length, int child_idx, IntTable *capacities,
 		IntTable *parents) {
-  printf("searching for suitable parent element for sequence length: %i\n",
-	 seq_length);
+  /* printf("searching for suitable parent element for sequence length: %i\n", */
+  /* 	 seq_length); */
   int caps_sorted[capacities->ncolumns];
   memcpy(caps_sorted, int_table_row(capacities, seq_length - 1),
 	 capacities->ncolumns * sizeof(int));
@@ -119,15 +119,15 @@ int find_parent(int seq_length, int child_idx, IntTable *capacities,
   for (int i = 0; i < capacities->ncolumns; i++) {
     int parent_idx = find_by_value(int_table_row(capacities, seq_length - 1),
 				   capacities->ncolumns, caps_sorted[i]);
-    printf("checking element with index: %i and capacity: %i\n",
-	   parent_idx, caps_sorted[i]);
+    /* printf("checking element with index: %i and capacity: %i\n", */
+    /* 	   parent_idx, caps_sorted[i]); */
     if (parent_idx == child_idx) {
       continue;
     }
     if (is_already_used_item(child_idx, seq_length, parents)) {
       continue;
     } else {
-      printf("returning parent index: %i\n", parent_idx);
+      // printf("returning parent index: %i\n", parent_idx);
       return parent_idx;
     }    
   }
@@ -167,9 +167,9 @@ int find_seq_length(Pair input_data[], int input_length) {
   int_table_fill(parents, -1);
   
   for (int l = 0; l <= input_length; l++) {
-    printf("considering sequence of %i elements:\n", l);
+    //printf("considering sequence of %i elements:\n", l);
     for (int t = 0; t < input_length; t++) {
-      printf("\tconsidering sequence ending on element %i:\n", t);
+      //printf("\tconsidering sequence ending on element %i:\n", t);
       int w = input_data[t].weight;
       int s = input_data[t].strength;
       if (l == 0) {
@@ -183,8 +183,8 @@ int find_seq_length(Pair input_data[], int input_length) {
       }
 
       int_table_set(parents, l, t, find_parent(l, t, capacities, parents));
-      printf("\t\tparent element for (%i; %i): %i\n", l, t,
-	     int_table_get(parents, l, t));
+      /* printf("\t\tparent element for (%i; %i): %i\n", l, t, */
+      /* 	     int_table_get(parents, l, t)); */
       if (int_table_get(parents, l, t) == -1) {
 	int_table_set(lengths, l, t, int_table_get(lengths, l - 1, t));
 	int_table_set(parents, l, t, -1);
