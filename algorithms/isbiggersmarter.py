@@ -8,12 +8,12 @@ def table_as_str(tbl, s_values):
     for iq in s_values:
         res += '{:5} '.format(iq)
     res += "\n"
-    
+
     n = 0
     for subtbl in tbl:
         res += "{:<4} ".format(str(n) + ":")
         n += 1
-        
+
         for item in subtbl:
             res += '{:5} '.format(item)
         res += '\n'
@@ -27,12 +27,12 @@ def find_longest_seq(input_seq):
     tbl = init_table(by_weights, s_vals)
     parents = init_table(by_weights, s_vals)
     logging.debug('memoization table: {}'.format(table_as_str(tbl, s_vals)))
-    
+
     logging.debug('starting search of a longest sequence...')
     for idx1, el1 in enumerate(by_weights):
         n_elephs = idx1 + 1
         w1, s1 = el1
-            
+
         logging.debug('\t considering sequence of {} elephants'
                       .format(n_elephs))
         for idx2, el2 in enumerate(by_s_vals):
@@ -41,9 +41,9 @@ def find_longest_seq(input_seq):
                 parents[n_elephs][idx2] = -1
                 tbl[n_elephs][idx2] = 1
                 continue
-                
+
             logging.debug('\t\t weight: {}; iq: {}'.format(w2, s2))
-            
+
             thresh_w, thresh_s = by_s_vals[idx2]
             biggest_len, biggest_len_idx = _find_best_parent(
                 tbl[n_elephs - 1], by_s_vals, thresh_s, thresh_w)
@@ -56,7 +56,7 @@ def find_longest_seq(input_seq):
 
     logging.debug('table after search: {}'.format(table_as_str(tbl, s_vals)))
     logging.debug('parents map: {}'.format(table_as_str(parents, s_vals)))
-    
+
     path = _reconstruct_path(tbl, parents)
     path.reverse()
     return [by_s_vals[i] for i in path]
@@ -77,12 +77,12 @@ def _find_best_parent(tbl, input_seq, thresh_iq, thresh_w):
                if item[1] < thresh_iq if item[0] > thresh_w]
     lengths = [tbl[idx] for idx in indexes] + [-1]
     logging.debug('best parent sequences found: {}'.format(lengths))
-    
+
     longest, longest_idx = -1, -1
     for idx, ln in enumerate(lengths):
         if ln > longest:
             longest, longest_idx = ln, indexes[idx]
-            
+
     return longest, longest_idx
 
 
@@ -112,7 +112,7 @@ def _reconstruct_path(tbl, parents):
 
     return _concat_path(max_idx, parents, max_row_idx)
 
-    
+
 def _concat_path(idx, parents, row_idx):
     parent_idx = parents[row_idx][idx]
     if row_idx == 1 or parent_idx == -1:
@@ -120,7 +120,7 @@ def _concat_path(idx, parents, row_idx):
 
     logging.debug('parent of {} is {}'.format(idx, parent_idx))
     return [idx] + _concat_path(parent_idx, parents, row_idx - 1)
-    
+
 
 def configure_logging():
     logging.basicConfig(level=logging.DEBUG,

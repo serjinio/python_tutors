@@ -20,7 +20,8 @@ def divide(input_list):
 
 
 def optimize(input_list, target_sum):
-    """Returns subsequence with sum, which is most close to the requested target_sum."""
+    """Returns subsequence with sum, which is most close
+    to the requested target_sum."""
     upper_bound = sum(input_list) + 1
     s = list()
     for i in range(upper_bound):
@@ -46,7 +47,7 @@ def optimize(input_list, target_sum):
                     sumvalue, elements_num = i, j
                     
     logging.info(('solution search finished. closest possible sum value: {}; '
-                   'elements number: {}').format(sumvalue, elements_num))
+                  'elements number: {}').format(sumvalue, elements_num))
     target_sequence, other_sequence = find_target_seq(input_list, s, sumvalue)
     logging.debug('elements to make this sum: {}'.format(target_sequence))
     return target_sequence, other_sequence
@@ -108,5 +109,5 @@ if __name__ == '__main__':
     test_data3 = [3, 1, 2, 2, 1, 1]
     test_data4 = [1, 2, 344, 5, 6, 77, 8, 6, 86, 5, 34, 3]
 
-    divide(test_data4)
+    divide(test_data1)
     
