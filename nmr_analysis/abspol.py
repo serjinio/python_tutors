@@ -17,14 +17,60 @@ import logging
 
 pd.options.display.mpl_style = 'default'
 
+
 NMR_SIGNALS_DATA_FOLDER = ('/Users/serj/Dropbox/RIKEN - Spin-isospin '
                            'lab materials/lab data/2013/0719/')
 water_signal = ('/Users/serj/projects/polp_data/1211/water-15.smd')
 # naph_signal = ('/Users/serj/Dropbox/RIKEN - Spin-isospin '
 #                 'lab materials/lab data/2013/0925/ise44.dat')
-naph_signal = ('/Users/serj/projects/polp_data/1220/ise36.dat')
-# naph_signal = ('/Users/serj/projects/polp_data/2013/0920/ise28.dat')
+naph_signal = ('/Users/serj/projects/polp_data/1225/ise32.dat')
+# naph_signal = ('/Users/serj/projects/polp_data/2013/0924/ise74.dat')
 
+
+###
+# constants
+###
+
+
+# magnetic moments of naphthalene and water
+water_mag_moment = 2.7927
+# TODO: Find out its magnetic moment, now using for proton
+naph_mag_moment = 2.7927
+MAG_MOMENT_RATIO = water_mag_moment / naph_mag_moment
+
+# difference in protons number of water and 6He samples:
+# this one assumes that samples are equal in volume
+# n_w / n_6He
+# water_n_protons = np.pi * 14e-3 ** 2 * 1e4 * 3.01e22 * 2 / 3.
+# naph_n_protons = np.pi * 14e-3 ** 2 * 1e4 * 2.89e22 * 8 / 18.
+# N_RATIO = water_n_protons / naph_n_protons
+
+# this one assumes that samples with equal amount of protons
+N_RATIO = 1.
+
+# Setup-specific correction for water signal.
+# In this case ratio of signals from bottle to signal from
+# reference sponge as we cannot get signal with
+# necessarily short decay time from sponge - it is too weak.
+WATER_SIGNAL_CORRECTION_FACTOR = 0.1535
+# WATER_SIGNAL_CORRECTION_FACTOR = 1.
+
+# electronic gain difference during water and signals 6He acquisition
+# G_w / G_naph
+# PAmp + main_amp [dB]
+G_w = 30. + 70.
+# just main_amp [dB]
+
+# last year
+# G_naph = 70.
+# this year
+G_naph = 80.
+
+ELECTRONIC_GAIN_RATIO = 10 ** ((G_w - G_naph) / 20.)
+
+# small spin flip during naph pol. measurement [deg]
+# SPIN_FLIP_ANGLE = 7.55
+SPIN_FLIP_ANGLE = 7.55
 
 ############################################################
 # Data handling
@@ -162,49 +208,8 @@ def configure_logging():
 # Main procs
 ############################################################
 
-
-# magnetic moments of naphthalene and water
-water_mag_moment = 2.7927
-# TODO: Find out its magnetic moment, now using for proton
-naph_mag_moment = 2.7927
-MAG_MOMENT_RATIO = water_mag_moment / naph_mag_moment
-
-# difference in protons number of water and 6He samples:
-# this one assumes that samples are equal in volume
-# n_w / n_6He
-# water_n_protons = np.pi * 14e-3 ** 2 * 1e4 * 3.01e22 * 2 / 3.
-# naph_n_protons = np.pi * 14e-3 ** 2 * 1e4 * 2.89e22 * 8 / 18.
-# N_RATIO = water_n_protons / naph_n_protons
-
-# this one assumes that samples with equal amount of protons
-N_RATIO = 1.
-
-# Setup-specific correction for water signal.
-# In this case ratio of signals from bottle to signal from
-# reference sponge as we cannot get signal with
-# necessarily short decay time from sponge - it is too weak.
-WATER_SIGNAL_CORRECTION_FACTOR = 0.1535
-# WATER_SIGNAL_CORRECTION_FACTOR = 1.
-
-# electronic gain difference during water and signals 6He acquisition
-# G_w / G_naph
-# PAmp + main_amp [dB]
-G_w = 30. + 70.
-# just main_amp [dB]
-
-# last year
-# G_naph = 70.
-# this year
-G_naph = 30 + 50.
-
-ELECTRONIC_GAIN_RATIO = 10 ** ((G_w - G_naph) / 20.)
-
 # water thermal pol
 WATER_POL = water_term_pol(0.1, 295)
-
-# small spin flip during naph pol. measurement [deg]
-# SPIN_FLIP_ANGLE = 4.78
-SPIN_FLIP_ANGLE = 90.
 
 
 def compute_polarization():

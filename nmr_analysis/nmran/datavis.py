@@ -73,6 +73,10 @@ class DataViewer(object):
         del self._objects[name]
         self._lstObjects_removeobj(name)
 
+    def get_object(self, name):
+        """Gets object by name if such exists, otherwise returns None."""
+        return self._objects.get(name)
+
     def _init_ui(self):
         self._init_menu()
         self._frame = ttk.Frame(self.window)
@@ -169,7 +173,8 @@ class DataViewer(object):
     def _draw_object(self, obj, name):
         ax = self._mplFigure.add_subplot('111')
         self._draw_pd_dataframe(obj, name, ax)
-        ax.legend()
+        ax.legend(loc=4, prop={'size': 8})
+        ax.grid(b=True)
         self.refresh()
 
     def _draw_pd_dataframe(self, df, name, axes):
@@ -178,14 +183,20 @@ class DataViewer(object):
             logging.warn('attemted to draw an empty dataset: "{}"'
                          .format(name))
             return
+        if len(df) < 200:
+            drawstyle = {'linestyle': 'None', 'marker': 'o',
+                         'markersize': 6}
+        else:
+            drawstyle = {}
         for c in df.columns:
             if isinstance(df[c][df.index[0]], complex):
                 axes.plot(df.index, np.real(df[c]),
-                          label=name + " - Re(" + str(c) + ")")
+                          label=name + " - Re(" + str(c) + ")", **drawstyle)
                 axes.plot(df.index, np.imag(df[c]),
-                          label=name + " - Im(" + str(c) + ")")
+                          label=name + " - Im(" + str(c) + ")", **drawstyle)
             else:
-                axes.plot(df.index, df[c], label=name + " - " + str(c))
+                axes.plot(df.index, df[c], label=name + " - " + str(c),
+                          **drawstyle)
 
     def _draw_sample_sine(self):
         args = np.arange(1000.)
