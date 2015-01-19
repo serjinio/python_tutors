@@ -5,7 +5,7 @@ Peter Norvig's Lisp Interpreter for Python
 import math, operator as op
 
 #Environment
-class Env(dict):
+class Env(
     "An environment: a dict of {'var':val} pairs, with an outer Env."
     def __init__(self, parms=(), args=(), outer=None):
         self.update(zip(parms,args))

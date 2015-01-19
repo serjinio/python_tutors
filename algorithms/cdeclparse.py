@@ -1,3 +1,7 @@
+"""
+cdecl - exercise program in language parsing,
+  parses C type declarations and translates into "plain english"
+"""
 
 
 import logging
@@ -203,8 +207,8 @@ def _find_decl_identifier(tokens):
     for idx, t in enumerate(tokens):
         if _is_identifier(t):
             return idx, t
-    raise ValueError('No identifier found in the declaration: "{}"'
-                     .format(tokens))
+    raise SyntaxError('No identifier found in the declaration: "{}"'
+                      .format(tokens))
 
 
 def _get_next_decl_token(left, right, direction):
