@@ -1,4 +1,4 @@
-/**
+/ /**
    Program calculates MW & NMR frequencies or ISE process.
    
    Result gets written to standard output in the following format:

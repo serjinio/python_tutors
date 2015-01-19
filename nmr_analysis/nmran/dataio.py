@@ -68,6 +68,10 @@ def load_smd(filepath):
     
     # name
     df.columns = ['Re', 'Im']
+    # put data into complex values
+    df['fid'] = df['Re'] + df['Im'] * 1j
+    del df['Re']
+    del df['Im']
     # make up time column (us)
     df['t'] = [dwell * n for n in range(len(df))]
     # index by time
@@ -89,11 +93,14 @@ def load_dat(filepath):
     del df[5]
     del df[4]
     del df[3]
-        
     # name
     df.columns = ['t', 'Re', 'Im']
     # time in us
     df['t'] = df['t'] * 1e6
+    # put data into complex values
+    df['fid'] = df['Re'] + df['Im'] * 1j
+    del df['Re']
+    del df['Im']
     # index by time
     df = df.set_index('t')
 
