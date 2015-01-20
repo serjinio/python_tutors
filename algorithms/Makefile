@@ -13,7 +13,7 @@ weights: weights.c
 	gcc -std=c99 -g -pthread -lpthread -o weights weights.c
 
 cdecl: cdecl.c
-	gcc -std=c99 -g -o cdecl cdecl.c
+	gcc -std=c99 -g -Wall -o cdecl cdecl.c
 
 eratosthenes: eratosthenes.c
 	gcc -std=c99 -o eratosthenes eratosthenes.c -lm 

@@ -22,6 +22,14 @@
 
 
 /************************************************************
+ Useful macros
+************************************************************/
+
+
+#define STR_IS_EQUAL(str1, str2) (strcmp(str1, str2) == 0 ? true : false)
+
+
+/************************************************************
  Data structures & their functions
 ************************************************************/
 
@@ -37,7 +45,7 @@ static struct token_list_node *token_list_node_new(char *token) {
   return node;
 }
 
-int token_list_node_free(struct token_list_node *node) {
+void token_list_node_free(struct token_list_node *node) {
   assert(node != NULL);
   free(node->token);
   free(node);
@@ -274,8 +282,8 @@ static _Bool is_type_name(char *token) {
   const char *type_name = TYPE_NAMES[idx];  
 
   while (type_name[0] != '\0') {
-    if (strcmp(token, type_name) == 0) {
-      return true;
+    if (STR_IS_EQUAL(token, type_name)) {
+	return true;
     }
     
     idx += 1;
@@ -290,7 +298,7 @@ static _Bool is_type_qualifier(char *token) {
   const char *type_qualifier = TYPE_QUALIFIERS[idx];  
 
   while (type_qualifier[0] != '\0') {
-    if (strcmp(token, type_qualifier) == 0) {
+    if (STR_IS_EQUAL(token, type_qualifier)) {
       return true;
     }
     
@@ -323,7 +331,8 @@ static _Bool is_digits_only(char *str) {
   return true;
 }
 
-static struct token_list_node *find_identifier_node(struct tokens_list *list) {
+static struct token_list_node *
+find_identifier_node(struct tokens_list *list) {
   assert(list != NULL);
   struct token_list_node *node = list->head;
 
@@ -340,14 +349,15 @@ static struct token_list_node *find_identifier_node(struct tokens_list *list) {
 static struct token_list_node *
 get_next_decl_token(struct tokens_list *left,
 		    struct tokens_list *right,
-		    int *direction) {
+		    int *pdirection) {
   assert(left != NULL && right != NULL);
   if (left->length == 0 && right->length == 0) {
     return NULL;
   }
 
+  int direction = *pdirection;
   struct token_list_node *node = NULL;
-  if (*direction > 0) {
+  if (direction > 0) {
     if (right->length > 0) {
       node = tokens_list_pop(right);
     } else {
@@ -363,13 +373,13 @@ get_next_decl_token(struct tokens_list *left,
 
   assert(node != NULL);
   
-  if (*direction > 0) {
-    if (strcmp(node->token, ")") == 0) {
-      *direction *= -1;
+  if (direction > 0) {
+    if (STR_IS_EQUAL(node->token, ")")) {
+      *pdirection *= -1;
     }
   } else {
-    if (strcmp(node->token, "(") == 0) {
-      *direction *= -1;
+    if (STR_IS_EQUAL(node->token, "(")) {
+      *pdirection *= -1;
     }
   } 
 	       
@@ -381,17 +391,17 @@ static char *translate_token(char *token, int parse_direction) {
   
   char *str = NULL;
   
-  if (strcmp(token, "int") == 0) {
+  if (STR_IS_EQUAL(token, "int")) {
     asprintf(&str, "%s", "integer");
-  } else if (strcmp(token, "*") == 0) {
+  } else if (STR_IS_EQUAL(token, "*")) {
     asprintf(&str, "%s", "pointer-to");
-  } else if (strcmp(token, "const") == 0) {
+  } else if (STR_IS_EQUAL(token, "const")) {
     asprintf(&str, "%s", "read-only");
-  } else if (strcmp(token, "[") == 0) {
+  } else if (STR_IS_EQUAL(token, "[")) {
     asprintf(&str, "%s", "array of");
-  } else if (strcmp(token, "]") == 0) {
+  } else if (STR_IS_EQUAL(token, "]")) {
     asprintf(&str, "%s", "");
-  } else if (strcmp(token, "(") == 0 && parse_direction > 0) {
+  } else if (STR_IS_EQUAL(token, "(") == 0 && parse_direction > 0) {
     asprintf(&str, "%s", "function, returning");
   } else if (is_digits_only(token)) {
     asprintf(&str, "%s %s", token, "elements of");
@@ -409,16 +419,18 @@ int suppress_redundant_decl_tokens(const char *current_token,
   if (direction > 0) {
     // if that's a function ptr declaration, then just skip until
     // its arguments list closes      
-    if (strcmp(current_token, "(") == 0) {
+    if (STR_IS_EQUAL(current_token, "(")) {
       struct token_list_node *token_node = NULL;
       _Bool finished = false;
-      while(!finished) {
+      do {
 	token_node = tokens_list_pop(right_part);
 	if (token_node != NULL) {
 	  if (strcmp(token_node->token, ")") == 0) finished = true;
 	  token_list_node_free(token_node);
+	} else {
+	  finished = true;
 	}
-      }
+      } while (!finished);
     }
   }
 
@@ -427,15 +439,14 @@ int suppress_redundant_decl_tokens(const char *current_token,
 
 _Bool should_translate(const char *token, int parse_direction) {
   if (parse_direction < 0) {
-    if (strcmp(token, "(") == 0) {
+    if (STR_IS_EQUAL(token, "(")) {
       return false;
     }
   } else {
-    if (strcmp(token, ")") == 0) {
+    if (STR_IS_EQUAL(token, ")")) {
       return false;
     }
   }
-  
   return true;
 }
 
@@ -557,7 +568,7 @@ static void run_tests() {
  Main
 ************************************************************/
 
-void main(int argc, char* argv[]) {
+int main(int argc, char* argv[]) {
 #ifdef _TESTING
   run_tests();
 #else
