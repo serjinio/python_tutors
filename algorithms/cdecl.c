@@ -401,7 +401,7 @@ static char *translate_token(char *token, int parse_direction) {
     asprintf(&str, "%s", "array of");
   } else if (STR_IS_EQUAL(token, "]")) {
     asprintf(&str, "%s", "");
-  } else if (STR_IS_EQUAL(token, "(") == 0 && parse_direction > 0) {
+  } else if (STR_IS_EQUAL(token, "(") && parse_direction > 0) {
     asprintf(&str, "%s", "function, returning");
   } else if (is_digits_only(token)) {
     asprintf(&str, "%s %s", token, "elements of");

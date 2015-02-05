@@ -222,6 +222,13 @@ int find_seq_length(Pair input_data[], int input_length) {
 }
   
 int main(int argc, char* argv[]) {
+  union {
+    char a[10];
+    int i;
+  } a_union;
+  int *pint = (int*)&a_union;
+  *pint = 5;
+  
   Pair input[5607] = {};
   int data = 0, i = 0, input_length = 0;
   
