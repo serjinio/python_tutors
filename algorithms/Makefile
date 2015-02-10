@@ -25,4 +25,4 @@ cdecl_memtest: cdecl
 	valgrind --leak-check=full ./cdecl
 
 samplehash: samplehash.c
-	gcc -std=c99 -o samplehash samplehash.c
+	gcc -std=c99 -g -o samplehash samplehash.c
