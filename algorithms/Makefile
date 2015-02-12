@@ -1,5 +1,5 @@
 
-PROGS = cutting_sticks weights eratosthenes cdecl
+PROGS = cutting_sticks weights eratosthenes cdecl samplehash
 
 .PHONY = all clean
 
@@ -23,3 +23,6 @@ clean:
 
 cdecl_memtest: cdecl
 	valgrind --leak-check=full ./cdecl
+
+samplehash: samplehash.c
+	gcc -std=c99 -g -o samplehash samplehash.c

@@ -24,7 +24,7 @@ logging.basicConfig(level=logging.WARN,
 
 @task(default=True)
 def setup():
-    setup_mosh()
+    # setup_mosh()
     setup_screen()
     setup_emacs()
     setup_subversion()
