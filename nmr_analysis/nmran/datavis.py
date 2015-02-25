@@ -183,7 +183,7 @@ class DataViewer(object):
             logging.warn('attemted to draw an empty dataset: "{}"'
                          .format(name))
             return
-        if len(df) < 200:
+        if len(df) < 100:
             drawstyle = {'linestyle': 'None', 'marker': 'o',
                          'markersize': 6}
         else:
