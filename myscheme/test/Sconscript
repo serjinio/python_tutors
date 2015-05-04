@@ -1,0 +1,22 @@
+
+import os
+
+Import('test_env')
+
+
+conf = Configure(test_env)
+if not conf.CheckLib('check'):
+    print 'Did not find "check" C testing framework library.'
+    print 'Please install it before running tests from: http://check.sourceforge.net/'
+    Exit(1)
+test_env = conf.Finish()
+
+test_env.Append(LIBPATH='#src')
+test_env.ParseConfig("pkg-config check --cflags --libs")
+test_env.Prepend(LIBS=['mysc', 'simpalg'])
+
+test_bin = test_env.Program('test_mysc', Glob('*.c'));
+test_env.Test('test.passed', test_bin)
+test_env.AlwaysBuild('test.passed')
+test_env.Alias('test', 'test.passed')
+
