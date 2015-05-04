@@ -13,11 +13,10 @@ from nmran.datavis import data_viewer
 from nmran import common
 
 
-FID_EXP_WEIGHTING = 15.
+FID_EXP_WEIGHTING = 5.
 
 
 data2014_dir = '/Users/serj/projects/polp_data/1220/'
-small_flip_angle2014 = 7.55
 mwdep2014_fids = [
     {'data': 'ise50.dat', 'gain': 80, 'pc': 90, 'P': 0},
     {'data': 'ise48.dat', 'gain': 80, 'pc': 300, 'P': 0.4},
@@ -33,33 +32,10 @@ mwdep2014_fids = [
     {'data': 'ise76.dat', 'gain': 80, 'pc': 330, 'P': 14}
 ]
 
-
-data2013_dir = '/Users/serj/projects/polp_data/2013/0919/'
-small_flip_angle2013 = 4.75
-mwdep2013_fids = [
-    {'data': 'ise43.dat', 'gain': 70, 'pc': 90, 'P': 1.2},
-    {'data': 'ise44.dat', 'gain': 70, 'pc': 300, 'P': 2.2},
-    {'data': 'ise46.dat', 'gain': 70, 'pc': 300, 'P': 3.55},
-    {'data': 'ise47.dat', 'gain': 70, 'pc': 300, 'P': 4.6},
-    {'data': 'ise38.dat', 'gain': 70, 'pc': 300, 'P': 5.5},
-    {'data': 'ise48.dat', 'gain': 70, 'pc': 315, 'P': 6.6},
-    {'data': 'ise49.dat', 'gain': 70, 'pc': 330, 'P': 7.3},
-    {'data': 'ise50.dat', 'gain': 70, 'pc': 330, 'P': 8.2},
-    {'data': 'ise52.dat', 'gain': 70, 'pc': 330, 'P': 8.35},
-    {'data': 'ise53.dat', 'gain': 70, 'pc': 330, 'P': 8.8},
-    {'data': 'ise54.dat', 'gain': 70, 'pc': 315, 'P': 10.95},
-    {'data': 'ise55.dat', 'gain': 70, 'pc': 330, 'P': 11.9},
-    {'data': 'ise56.dat', 'gain': 70, 'pc': 330, 'P': 14.0}
+data2015_dir = '/Users/serj/projects/polp_data/02xx/'
+mwdep2015_fids = [
+    {'data': 'ise50.dat', 'gain': 80, 'P': 0},
 ]
-
-
-def process_fid(fid, absint=False):
-    ft = cut_fft(do_fft(cut_fid(fid)))
-    if absint:
-        res = integrate.simps(np.abs(ft['fft']), ft.index)
-    else:
-        res = integrate.simps(np.real(ft['fft']), ft.index)
-    return res
 
 
 def do_fft(fid):
@@ -84,7 +60,8 @@ def compute_mwdep(fids, data_dir, pc=False, weighting=False):
         fid_filepath = os.path.join(data_dir, ds['data'])
         fid = cut_fid(load(fid_filepath))
         if weighting:
-            fid['fid'] = weight_signal(fid.index, fid['fid'], lb=5)
+            fid['fid'] = weight_signal(fid.index, fid['fid'],
+                                       lb=FID_EXP_WEIGHTING)
         ft = cut_fft(do_fft(fid))
         if pc:
             ft['fft'] = auto_phase_correct(ft['fft'], ft.index,
@@ -122,11 +99,8 @@ def show_fids(fids, data_dir, data_viewer, prefix='',
         fid = load(fid_filepath)
         fid_cutted = cut_fid(fid)
         if weighting:
-            fid['fid'] = weight_signal(fid.index, fid['fid'],
-                                       lb=FID_EXP_WEIGHTING)
-            fid_cutted['fid'] = weight_signal(fid_cutted.index,
-                                              fid_cutted['fid'],
-                                              lb=FID_EXP_WEIGHTING)
+            fid_cutted['fid'] = weight_signal(
+                fid_cutted.index, fid_cutted['fid'], lb=FID_EXP_WEIGHTING)
         electronic_gain_factor = 10 ** (-ds['gain'] / 20.)
         fid *= electronic_gain_factor
         fid_cutted *= electronic_gain_factor
@@ -139,42 +113,12 @@ def show_fids(fids, data_dir, data_viewer, prefix='',
 if __name__ == '__main__':
     common.configure_logging()
     dv = data_viewer()
-
-    fid_file = {'data': 'ise36.dat', 'gain': 80, 'pc': 90, 'P': 0}
-    show_fids([fid_file], data2014_dir, dv,
-              prefix='2014, ise36.dat: ')
-                
+    
     show_fids(mwdep2014_fids, data2014_dir, dv,
-              prefix='2014: ')
-    show_fids(mwdep2013_fids, data2013_dir, dv,
-              prefix='2013: ')
+              prefix='2014: ', weighting=True)
     show_fts(mwdep2014_fids, data2014_dir, dv,
-             pc=True, prefix='2014: ')
-    show_fts(mwdep2013_fids, data2013_dir, dv,
-             pc=True, prefix='2013: ')
+             pc=True, weighting=True, prefix='2014: ')
     
     mwdep2014 = compute_mwdep(mwdep2014_fids, data2014_dir,
-                              pc=True)
+                              pc=True, weighting=True)
     dv.add_object(mwdep2014, 'MW dep 2014')
-    mwdep2013 = compute_mwdep(mwdep2013_fids, data2013_dir,
-                              pc=True)
-    # scale 2013 data by a peak polarizations ratio:
-    # Peak_P_2014 / Peak_P_2013
-    # it is done as we do not know build ups time used in
-    # MW dep. measurement in 2013
-    mwdep2013 /= 2.47
-    dv.add_object(mwdep2013, 'MW dep 2013')
-    
-    mwdep2014_nopc = compute_mwdep(mwdep2014_fids, data2014_dir,
-                                   pc=False)
-    # scale to each other pc and nopc versions
-    mwdep2014_nopc /= 3.50
-    dv.add_object(mwdep2014_nopc, 'MW dep 2014 no p.c.')
-    mwdep2013_nopc = compute_mwdep(mwdep2013_fids, data2013_dir,
-                                   pc=False)
-    # Peak_P_2014 / Peak_P_2013 scaling
-    mwdep2013_nopc /= 2.47
-    # scale to each other pc and nopc versions
-    mwdep2013_nopc /= 4.22
-    dv.add_object(mwdep2013_nopc, 'MW dep 2013 no p.c.')
-
